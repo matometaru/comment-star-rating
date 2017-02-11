@@ -1,0 +1,106 @@
+.comment-star {
+  background-image: url(../img/fivestar01.png);
+  background-size: contain;
+  background-repeat: no-repeat;
+  width: 100px;
+  height: 16px;
+}
+.comment-star-2 {background-image: url(../img/fivestar02.png);}
+.comment-star-3 {background-image: url(../img/fivestar03.png);}
+.comment-star-4 {background-image: url(../img/fivestar04.png);}
+.comment-star-5 {background-image: url(../img/fivestar05.png);}
+
+/* raty overwrite */
+#input-type-star .star-on-png,
+#input-type-star .star-off-png,
+#input-type-star .star-half-png {
+    font-family: dashicons;
+    color: #daa520;
+    font-size: 20px;
+}
+#input-type-star .star-on-png:before {
+	content: "\f155";
+}
+#input-type-star .star-off-png:before {
+    content: "\f154";
+}
+#input-type-star .star-half-png:before {
+	content: "\f459";
+}
+
+/* wp_star_rating() style */
+.screen-reader-text {
+  display: none;
+}
+.star-rating .star-full:before {
+    content: "\f155";
+}
+
+.star-rating .star-half:before {
+    content: "\f459";
+}
+
+.star-rating .star-empty:before {
+    content: "\f154";
+}
+
+.star-rating .star {
+    color: #daa520;
+    display: inline-block;
+    font-family: dashicons;
+    font-size: 20px;
+    font-style: normal;
+    font-weight: 400;
+    height: 20px;
+    line-height: 1;
+    text-align: center;
+    text-decoration: inherit;
+    vertical-align: top;
+    width: 20px;
+}
+
+/* #star-conter */
+#star-counter {
+  width: 400px;
+}
+
+.horizontal-bar-graph {
+  display: table;
+  width: 100%;
+}
+
+.horizontal-bar-graph-segment {
+  display: table-row;
+}
+
+.horizontal-bar-graph-label {
+  display: table-cell;
+  text-align: right;
+  padding: 4px 10px 4px 0;
+  vertical-align: baseline;
+  white-space: nowrap;
+}
+
+.horizontal-bar-graph-value {
+  display: table-cell;
+  vertical-align: middle;
+  width: 100%;
+}
+
+.horizontal-bar-graph-value-bg {
+  background: #ececec;
+  line-height: 1;
+}
+.horizontal-bar-graph-value-bar {
+  background: #daa520;
+  box-sizing: border-box;
+  height: 1.7em;
+  vertical-align: bottom;
+  overflow: visible;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.horizontal-bar-graph-num {
+  padding: 0 0 0 10px;
+}
