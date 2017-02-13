@@ -38,10 +38,7 @@ class CommentStarRating
 
 	function init() {
 		if ( is_admin() ) {
-			//add_action( 'admin_init', array( $this, 'admin_init' ) );
 			add_action( 'admin_menu', array( $this, 'admin_menu' ) );
-			// add_action( 'admin_init', array( $this, 'admin_init' ) );
-			// add_action( 'plugin_row_meta', array( $this, 'plugin_row_meta' ), 10, 2 );
 		} else {
 			$this->options = get_option($this->text_domain);
 			add_action( 'wp',  array( $this, 'get_average_rating') );
@@ -67,7 +64,7 @@ class CommentStarRating
             'echo'      => false
 		)); 
 
-		$output .= '<p class="star-counter-tit">' . __('5つ星のうち', $this->text_domain ) . number_format_i18n( $this->average, 1 ) . '</p>';
+		$output .= '<p class="star-counter-tit">' . esc_html__('5つ星のうち', $this->text_domain ) . number_format_i18n( $this->average, 1 ) . '</p>';
 		return $output . '<div id="star-counter"></div>';
 	}
 	function get_average_rating() {
@@ -174,43 +171,16 @@ class CommentStarRating
 		wp_enqueue_style( 'csr-raty', COMMENT_STAR_RATING_URL.'/css/jquery.raty.css' );
 	}
 	function wp_enqueue_scripts() {
-	  	wp_enqueue_script('d3',COMMENT_STAR_RATING_URL.'/js/d3.min.js');
-	  	wp_enqueue_script('raty',COMMENT_STAR_RATING_URL.'/js/jquery.raty.js');
+	  	wp_enqueue_script('d3',COMMENT_STAR_RATING_URL.'/js/d3.min.js', array('jquery'));
+	  	wp_enqueue_script('raty',COMMENT_STAR_RATING_URL.'/js/jquery.raty.js', array('jquery'));
 	}
 	// コメントに星入力フォームの追加・削除
 	function comment_form( $fields ) {
 		global $post;
-		echo "post_id = " . $post->ID;
 		$selector = '';
 		$post_type = get_post_type();
 		$fields['rating'] = null;
-		$ratings = array (
-			array(
-				'rate' => 1,
-				'text' => '全く気に入らない'
-			),
-			array(
-				'rate' => 2,
-				'text' => '気に入らない'
-			),
-			array(
-				'rate' => 3,
-				'text' => '普通'
-			),
-			array(
-				'rate' => 4,
-				'text' => '気に入った'
-			),
-			array(
-				'rate' => 5,
-				'text' => 'とても気に入った'
-			),
-		);
 		if ( $this->options[$post_type] == 1  ) {
-			for ( $i = 0; $i < 5; $i++ ) {
-				$selector .= '<option value="' . $ratings[$i]['rate'] . '" ' . selected($ratings[$i]['rate'], 3, false ) . '>' . $ratings[$i]['rate'] . ' : ' . $ratings[$i]['text'] . '</option>';
-			}
-			//$fields['rating'] = '<p class="comment-form-rating"><label for="rating">お客様の評価<span class="required">*</span></label>' . '<select id="rating" name="csr_rating" size="1">' . $selector . '</select></p>';
 			$fields['rating'] .= '<div id="input-type-star"></div>';
 			$fields['rating'] .= '<input type="hidden" name="csr_rating" value="" />';
 		}
@@ -228,7 +198,16 @@ class CommentStarRating
 		$_comment = get_comment( $comment_id );
 		$_post    = get_post( $_comment->comment_post_ID );
 		if( !is_user_logged_in() ) {
+			// data check
 			$rating = isset( $_POST['csr_rating'] ) && is_numeric( $_POST['csr_rating'] ) ? $_POST['csr_rating'] : 3;
+			$rating = intval( $rating );
+			if ( ! $rating ) {
+				$rating = '';
+			}
+			if ( strlen( $rating ) > 1 ) {
+				$rating = substr( $rating, 0, 1 );
+			}
+			// add
 			add_comment_meta( $comment_id, 'csr_rating', $rating );
 		}
 		return $comment_id;
@@ -238,8 +217,9 @@ class CommentStarRating
 		$post_type = get_post_type();
 		$comment_id = get_comment_ID();
 		$star = get_comment_meta( get_comment_ID(), 'csr_rating', true);
+		$star = isset( $star ) && is_numeric( $star ) ? $star : 3;
 
-		if ( $this->options[$post_type] == 1  ) {
+		if ( isset( $this->options[$post_type] ) && $this->options[$post_type] == 1  ) {
 			$output = wp_star_rating( array(
 			    'rating'    => $star,
 			    'type'      => 'rating',
@@ -263,16 +243,16 @@ class CommentStarRating
 		$post_types = wp_list_filter( get_post_types(array('public'=>true)),array('attachment'), 'NOT' );
 		?>
 		<div class="wrap">
-			<h2><?php echo $this->name; ?> &raquo; <?php _e('Settings'); ?></h2>
-			<form id="<?php echo $this->text_domain; ?>" method="post" action="">
-				<?php //wp_nonce_field( 'csr-nonce-key', $this->text_domain ); ?>
+			<h2><?php echo esc_attr($this->name); ?> &raquo; <?php _e('Settings'); ?></h2>
+			<form id="<?php echo esc_attr($this->text_domain); ?>" method="post" action="">
+				<?php wp_nonce_field( 'csr-nonce-key', $this->text_domain ); ?>
                 <h3><?php _e('有効にする投稿タイプを選択してください'); ?></h3>
 				<?php
 					foreach ( $post_types  as $post_type ) {
 				?>
 				<p>
-					<strong><?php echo $post_type; ?>ページ上で有効にします</strong>
-                    <input type="checkbox" name="<?php echo $this->text_domain; ?>[<?php echo $post_type; ?>]"  value="1" <?php if( $this->options[$post_type] == '1' ) echo 'checked'; ?> />
+					<strong><?php echo esc_attr($post_type); ?>ページ上で有効にします</strong>
+                    <input type="checkbox" name="<?php echo esc_attr($this->text_domain); ?>[<?php echo esc_attr($post_type); ?>]"  value="1" <?php if( $this->options[$post_type] == '1' ) echo 'checked'; ?> />
                 </p>
                 <?php 
             		} 
@@ -280,11 +260,11 @@ class CommentStarRating
                 <h3>コメントの入力から外したい要素を選択</h3>
                 <p>
 					<strong>URLを外す</strong>
-	                <input type="checkbox" name="<?php echo $this->text_domain; ?>[url]"  value="1" <?php if( $this->options['url'] == '1' ) echo 'checked'; ?> />
+	                <input type="checkbox" name="<?php echo esc_attr($this->text_domain); ?>[url]"  value="1" <?php if( $this->options['url'] == '1' ) echo 'checked'; ?> />
                	</p>
                	<p>
 					<strong>メールアドレスを外す</strong>
-	                <input type="checkbox" name="<?php echo $this->text_domain; ?>[email]"  value="1" <?php if( $this->options['email'] == '1' ) echo 'checked'; ?> />
+	                <input type="checkbox" name="<?php echo esc_attr($this->text_domain); ?>[email]"  value="1" <?php if( $this->options['email'] == '1' ) echo 'checked'; ?> />
 	            </p>
 			    <p class="submit">
 			    	<input class="button-primary" type="submit" name='save' value='<?php _e('Save Changes') ?>' />
@@ -295,7 +275,7 @@ class CommentStarRating
 	}
 	// save
 	function admin_save_options() {
-		//if( checke_admin_referer( 'csr-nonce-key', $this->text_domain ) ) {
+		if( checke_admin_referer( 'csr-nonce-key', $this->text_domain ) ) {
 	        if (isset($_POST['save'])) {
 	        	if (isset($_POST[$this->text_domain])) {
 	        		update_option($this->text_domain, $_POST[$this->text_domain]);
@@ -307,38 +287,9 @@ class CommentStarRating
     		update_option( $this->text_domain, $this->options );
     		$this->admin_setting_form();
 			//wp_sage_redirect( menu_page_url( $this->text_domain, false ) );
-		//}
+		}
 	}
 }
-    
-/**
-* がっつりコメントをカスタムしたい場合
-*
-* wp_list_comments(array('callback' => 'csr_comment_custom'));
-*/
-/*
-function csr_comment_custom($comment , $args , $depth){
-	$GLOBALS['comment'] = $comment;
-	$star = get_comment_meta( get_comment_ID(), 'csr_rating', true); ?>
-	<li <?php comment_class(); ?> id="li-comment-<?php comment_ID(); ?>">
-		<div id="comment-<?php comment_ID(); ?>">
-			<div class="comment-star comment-star-<?php echo $star; ?>"></div>
-			<?php if ($comment->comment_approved == '0') : ?>
-				<em><?php _e('Your comment is awaiting moderation.') ; ?></em>
-				<br />
-			<?php endif; ?>
-			<div class="comment-meta commentmetadata"><a href="<?php echo htmlspecialchars( get_comment_link( $comment->comment_ID ) ); ?>"><?php printf(__('%1$s at %2$s'), get_comment_date(),  get_comment_time()); ?></a><?php edit_comment_link(__('(Edit)'),'  ',''); ?></div>
-			<?php comment_text(); ?>
-			<div class="vote">
-				<span>8人のお客様がこれが役に立ったと考えています. このレビューは参考になりましたか？</span><a href="#">はい</a><a href="#">いいえ</a>
-			</div>
-			<div class="reply">
-				<?php comment_reply_link(array_merge( $args, array('depth' => $depth, 'max_depth' => $args['max_depth']))); ?>
-			</div>
-		</div>
-	<?php
-}
-*/
 
 
 $comment_star_rating = new CommentStarRating();
