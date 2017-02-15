@@ -289,7 +289,6 @@ class CommentStarRating
 	        }
 	    }
         $this->options = get_option($this->text_domain);
-		var_dump($this->options);
 		$this->admin_setting_form();
 	}
 }
