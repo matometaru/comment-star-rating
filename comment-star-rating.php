@@ -180,7 +180,7 @@ class CommentStarRating
 		$selector = '';
 		$post_type = get_post_type();
 		$fields['rating'] = null;
-		if ( $this->options[$post_type] == 1  ) {
+		if ( isset( $this->options[$post_type] ) && $this->options[$post_type] == 1  ) {
 			$fields['rating'] .= '<div id="input-type-star"></div>';
 			$fields['rating'] .= '<input type="hidden" name="csr_rating" value="" />';
 		}
@@ -252,7 +252,7 @@ class CommentStarRating
 				?>
 				<p>
 					<strong><?php echo esc_attr($post_type); ?>ページ上で有効にします</strong>
-                    <input type="checkbox" name="<?php echo esc_attr($this->text_domain); ?>[<?php echo esc_attr($post_type); ?>]"  value="1" <?php if( $this->options[$post_type] == '1' ) echo 'checked'; ?> />
+                    <input type="checkbox" name="<?php echo esc_attr($this->text_domain); ?>[<?php echo esc_attr($post_type); ?>]"  value="1" <?php if( isset( $this->options[$post_type] ) && $this->options[$post_type] == '1' ) echo 'checked'; ?> />
                 </p>
                 <?php 
             		} 
@@ -260,11 +260,11 @@ class CommentStarRating
                 <h3>コメントの入力から外したい要素を選択</h3>
                 <p>
 					<strong>URLを外す</strong>
-	                <input type="checkbox" name="<?php echo esc_attr($this->text_domain); ?>[url]"  value="1" <?php if( $this->options['url'] == '1' ) echo 'checked'; ?> />
+	                <input type="checkbox" name="<?php echo esc_attr($this->text_domain); ?>[url]"  value="1" <?php if( isset( $this->options['url'] ) && $this->options['url'] == '1' ) echo 'checked'; ?> />
                	</p>
                	<p>
 					<strong>メールアドレスを外す</strong>
-	                <input type="checkbox" name="<?php echo esc_attr($this->text_domain); ?>[email]"  value="1" <?php if( $this->options['email'] == '1' ) echo 'checked'; ?> />
+	                <input type="checkbox" name="<?php echo esc_attr($this->text_domain); ?>[email]"  value="1" <?php if( isset( $this->options['email'] ) && $this->options['email'] == '1' ) echo 'checked'; ?> />
 	            </p>
 			    <p class="submit">
 			    	<input class="button-primary" type="submit" name='save' value='<?php _e('Save Changes') ?>' />
