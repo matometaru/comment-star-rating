@@ -154,7 +154,7 @@ class CommentStarRating
 						number: 5,		// number
 						score : 3,		// Defaults Star
 						//half : true,
-						//halfShow : true, 
+						//halfShow checke_admin_refere: true, 
 						hints: ['全く気に入らない', '気に入らない', '普通', '気に入った', 'とても気に入った'],
 					});
 					jQuery('#commentform').submit(function(){
@@ -245,7 +245,7 @@ class CommentStarRating
 		<div class="wrap">
 			<h2><?php echo esc_attr($this->name); ?> &raquo; <?php _e('Settings'); ?></h2>
 			<form id="<?php echo esc_attr($this->text_domain); ?>" method="post" action="">
-				<?php wp_nonce_field( 'csr-nonce-key', $this->text_domain ); ?>
+				<?php wp_nonce_field( 'csr-nonce-key', 'csr-key' ); ?>
                 <h3><?php _e('有効にする投稿タイプを選択してください'); ?></h3>
 				<?php
 					foreach ( $post_types  as $post_type ) {
@@ -275,19 +275,22 @@ class CommentStarRating
 	}
 	// save
 	function admin_save_options() {
-		if( checke_admin_referer( 'csr-nonce-key', $this->text_domain ) ) {
-	        if (isset($_POST['save'])) {
-	        	if (isset($_POST[$this->text_domain])) {
-	        		update_option($this->text_domain, $_POST[$this->text_domain]);
+	    if (isset($_POST['save'])) {
+			if( check_admin_referer( 'csr-nonce-key', 'csr-key' ) ) {
+	        	if (isset($_POST[$this->text_domain]) && is_array($_POST[$this->text_domain]) ) {
+	        		$this->options = $_POST[$this->text_domain];
+	        		foreach ($this->options as $key => $value) {
+	        			$this->options[$key] = '1';
+	        		}
+	        		update_option($this->text_domain, $this->options );
 				}
 				$this->message = __('Settings Updated.', $this->text_domain);
+				wp_safe_redirect( menu_page_url( $this->text_domain, false ) );
 	        }
-	        $this->options = get_option($this->text_domain);
-
-    		update_option( $this->text_domain, $this->options );
-    		$this->admin_setting_form();
-			//wp_sage_redirect( menu_page_url( $this->text_domain, false ) );
-		}
+	    }
+        $this->options = get_option($this->text_domain);
+		var_dump($this->options);
+		$this->admin_setting_form();
 	}
 }
 
