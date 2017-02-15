@@ -8,16 +8,13 @@
  * License: GPLv3
  * License URI: http://www.gnu.org/licenses/gpl-3.0
  */
-
 // wp_star_rating() を使うためのインクルード
 require_once(ABSPATH . 'wp-admin/includes/template.php');
-
 // settings
 define( "COMMENT_STAR_RATING_DIR", WP_PLUGIN_DIR."/comment-star-rating" );
 define( "COMMENT_STAR_RATING_URL", WP_PLUGIN_URL."/comment-star-rating" );
 define( "COMMENT_STAR_RATING_IMAGES_URL", COMMENT_STAR_RATING_URL."/images" );
 define( "COMMENT_STAR_RATING_DOMAIN", "comment-star-rating" );
-
 class CommentStarRating
 {
     public $ratings;
@@ -25,7 +22,6 @@ class CommentStarRating
     public $count;
     public $average;
     public $ratings_arrange;
-
     function __construct() {
 		$path               = __FILE__;
 		$dir                = dirname( $path );
@@ -35,7 +31,6 @@ class CommentStarRating
 		$this->prefix 		= 'csr_';
 		$this->options		= array();
     }
-
 	function init() {
 		if ( is_admin() ) {
 			add_action( 'admin_menu', array( $this, 'admin_menu' ) );
@@ -62,8 +57,7 @@ class CommentStarRating
             'type'      => 'rating',
             'number'    => $this->count,
             'echo'      => false
-		)); 
-
+		));
 		$output .= '<p class="star-counter-tit">' . esc_html__('5つ星のうち', $this->text_domain ) . number_format_i18n( $this->average, 1 ) . '</p>';
 		return $output . '<div id="star-counter"></div>';
 	}
@@ -84,7 +78,6 @@ class CommentStarRating
 		$this->total      = array_sum($this->ratings);
 		$this->count      = count($this->ratings);
 		$this->average    = $this->total / $this->count;
-
 		$this->ratings_arrange = array_count_values($this->ratings);
 		// 未定義、空なら0を入れる
 		for ( $i = 1; $i <= 5; $i++) {
@@ -284,15 +277,12 @@ class CommentStarRating
 	        		}
 	        		update_option($this->text_domain, $this->options );
 				}
-				$this->message = __('Settings Updated.', $this->text_domain);
-				wp_safe_redirect( menu_page_url( $this->text_domain, false ) );
+				//wp_safe_redirect( menu_page_url( $this->text_domain, false ) );
 	        }
 	    }
         $this->options = get_option($this->text_domain);
 		$this->admin_setting_form();
 	}
 }
-
-
 $comment_star_rating = new CommentStarRating();
 $comment_star_rating->init();
