@@ -58,8 +58,10 @@ class CommentStarRating
             'number'    => $this->count,
             'echo'      => false
 		));
-		$output .= '<p class="star-counter-tit">' . esc_html__('5つ星のうち', $this->text_domain ) . number_format_i18n( $this->average, 1 ) . '</p>';
-		return $output . '<div id="star-counter"></div>';
+		if( $this->count > 0 ) {
+			$output .= '<p class="star-counter-tit">' . esc_html__('5つ星のうち', $this->text_domain ) . number_format_i18n( $this->average, 1 ) . '</p>' . '<div id="star-counter"></div>';
+		}
+		return $output;
 	}
 	function get_average_rating() {
 		global $post;
@@ -77,12 +79,14 @@ class CommentStarRating
 		}
 		$this->total      = array_sum($this->ratings);
 		$this->count      = count($this->ratings);
-		$this->average    = $this->total / $this->count;
-		$this->ratings_arrange = array_count_values($this->ratings);
-		// 未定義、空なら0を入れる
-		for ( $i = 1; $i <= 5; $i++) {
-			if( !isset($this->ratings_arrange[$i]) ) {
-				$this->ratings_arrange[$i] = 0;
+		if( $this->count > 0 ) {
+			$this->average    = $this->total / $this->count;
+			$this->ratings_arrange = array_count_values($this->ratings);
+			// 未定義、空なら0を入れる
+			for ( $i = 1; $i <= 5; $i++) {
+				if( !isset($this->ratings_arrange[$i]) ) {
+					$this->ratings_arrange[$i] = 0;
+				}
 			}
 		}
 	}
