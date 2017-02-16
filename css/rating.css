@@ -32,6 +32,9 @@
 .screen-reader-text {
   display: none;
 }
+.star-rating {
+  margin: 0.5em 0;
+}
 .star-rating .star-full:before {
     content: "\f155";
 }

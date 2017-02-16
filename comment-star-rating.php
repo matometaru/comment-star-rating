@@ -177,7 +177,7 @@ class CommentStarRating
 		$selector = '';
 		$post_type = get_post_type();
 		$fields['rating'] = null;
-		if ( isset( $this->options[$post_type] ) && $this->options[$post_type] == 1  ) {
+		if ( isset( $this->options['post_type'][$post_type] ) && $this->options['post_type'][$post_type] == 1  ) {
 			$fields['rating'] .= '<div id="input-type-star"></div>';
 			$fields['rating'] .= '<input type="hidden" name="csr_rating" value="" />';
 		}
@@ -216,7 +216,7 @@ class CommentStarRating
 		$star = get_comment_meta( get_comment_ID(), 'csr_rating', true);
 		$star = isset( $star ) && is_numeric( $star ) ? $star : 3;
 
-		if ( isset( $this->options[$post_type] ) && $this->options[$post_type] == 1  ) {
+		if ( isset( $this->options['post_type'][$post_type] ) && $this->options['post_type'][$post_type] == 1  ) {
 			$output = wp_star_rating( array(
 			    'rating'    => $star,
 			    'type'      => 'rating',
@@ -249,7 +249,7 @@ class CommentStarRating
 				?>
 				<p>
 					<strong><?php echo esc_attr($post_type); ?>ページ上で有効にします</strong>
-                    <input type="checkbox" name="<?php echo esc_attr($this->text_domain); ?>[<?php echo esc_attr($post_type); ?>]"  value="1" <?php if( isset( $this->options[$post_type] ) && $this->options[$post_type] == '1' ) echo 'checked'; ?> />
+                    <input type="checkbox" name="<?php echo esc_attr($this->text_domain); ?>[post_type][<?php echo esc_attr($post_type); ?>]"  value="1" <?php if( isset( $this->options['post_type'][$post_type] ) && $this->options['post_type'][$post_type] == '1' ) echo 'checked'; ?> />
                 </p>
                 <?php 
             		} 
@@ -272,12 +272,22 @@ class CommentStarRating
 	}
 	// save
 	function admin_save_options() {
+	    $post_types = wp_list_filter( get_post_types(array('public'=>true)),array('attachment'), 'NOT' );
 	    if (isset($_POST['save'])) {
 			if( check_admin_referer( 'csr-nonce-key', 'csr-key' ) ) {
 	        	if (isset($_POST[$this->text_domain]) && is_array($_POST[$this->text_domain]) ) {
 	        		$this->options = $_POST[$this->text_domain];
-	        		foreach ($this->options as $key => $value) {
-	        			$this->options[$key] = '1';
+	        		// post_type sanitaize
+	        		foreach ( $post_types as $post_type  ) {
+	        			if( isset($this->options['post_type'][$post_type]) ) {
+		        			$this->options['post_type'][$post_type] = '1';
+		        		}
+	        		}
+	        		if( isset( $this->options['url'] ) && $this->options['url'] == '1' ) {
+	        			$this->options['url'] = '1';
+	        		}
+	        		if( isset( $this->options['email'] ) && $this->options['email'] == '1' ) {
+	        			$this->options['email'] = '1';
 	        		}
 	        		update_option($this->text_domain, $this->options );
 				}
