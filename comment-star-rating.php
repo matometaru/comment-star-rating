@@ -26,7 +26,7 @@ class CommentStarRating
 		$path               = __FILE__;
 		$dir                = dirname( $path );
 		$this->ratings 		= array();
-        $this->text_domain  = basename( $dir );
+        // $this->text-domain  = basename( $dir );
 		$this->name 		= 'CommentStarRating';
 		$this->prefix 		= 'csr_';
 		$this->options		= array();
@@ -35,7 +35,7 @@ class CommentStarRating
 		if ( is_admin() ) {
 			add_action( 'admin_menu', array( $this, 'admin_menu' ) );
 		} else {
-			$this->options = get_option($this->text_domain);
+			$this->options = get_option(COMMENT_STAR_RATING_DOMAIN);
 			add_action( 'wp',  array( $this, 'get_average_rating') );
 			add_action( 'wp_head', array( $this, 'd3_init' ) );
 			add_action( 'wp_head', array( $this, 'raty_init' ) );
@@ -59,7 +59,7 @@ class CommentStarRating
             'echo'      => false
 		));
 		if( $this->count > 0 ) {
-			$output .= '<p class="star-counter-tit">' . esc_html__('5つ星のうち', $this->text_domain ) . number_format_i18n( $this->average, 1 ) . '</p>' . '<div id="star-counter"></div>';
+			$output .= '<p class="star-counter-tit">' . esc_html__('5つ星のうち', COMMENT_STAR_RATING_DOMAIN ) . number_format_i18n( (int)$this->average, 1 ) . '</p>' . '<div id="star-counter"></div>';
 		}
 		return $output;
 	}
@@ -174,7 +174,6 @@ class CommentStarRating
 	// コメントに星入力フォームの追加・削除
 	function comment_form( $fields ) {
 		global $post;
-		$selector = '';
 		$post_type = get_post_type();
 		$fields['rating'] = null;
 		if ( isset( $this->options['post_type'][$post_type] ) && $this->options['post_type'][$post_type] == 1  ) {
@@ -232,7 +231,7 @@ class CommentStarRating
 			$this->name, //page_title
 			$this->name, //menu_title
 			'manage_options', // capabiliity
-			$this->text_domain, //menu_slug
+			COMMENT_STAR_RATING_DOMAIN, //menu_slug
 			array( $this, 'admin_save_options' ) //callback
 		);
 	}
@@ -241,7 +240,7 @@ class CommentStarRating
 		?>
 		<div class="wrap">
 			<h2><?php echo esc_attr($this->name); ?> &raquo; <?php _e('Settings'); ?></h2>
-			<form id="<?php echo esc_attr($this->text_domain); ?>" method="post" action="">
+			<form id="<?php echo esc_attr(COMMENT_STAR_RATING_DOMAIN); ?>" method="post" action="">
 				<?php wp_nonce_field( 'csr-nonce-key', 'csr-key' ); ?>
                 <h3><?php _e('有効にする投稿タイプを選択してください'); ?></h3>
 				<?php
@@ -249,7 +248,7 @@ class CommentStarRating
 				?>
 				<p>
 					<strong><?php echo esc_attr($post_type); ?>ページ上で有効にします</strong>
-                    <input type="checkbox" name="<?php echo esc_attr($this->text_domain); ?>[post_type][<?php echo esc_attr($post_type); ?>]"  value="1" <?php if( isset( $this->options['post_type'][$post_type] ) && $this->options['post_type'][$post_type] == '1' ) echo 'checked'; ?> />
+                    <input type="checkbox" name="<?php echo esc_attr(COMMENT_STAR_RATING_DOMAIN); ?>[post_type][<?php echo esc_attr($post_type); ?>]"  value="1" <?php if( isset( $this->options['post_type'][$post_type] ) && $this->options['post_type'][$post_type] == '1' ) echo 'checked'; ?> />
                 </p>
                 <?php 
             		} 
@@ -257,11 +256,11 @@ class CommentStarRating
                 <h3>コメントの入力から外したい要素を選択</h3>
                 <p>
 					<strong>URLを外す</strong>
-	                <input type="checkbox" name="<?php echo esc_attr($this->text_domain); ?>[url]"  value="1" <?php if( isset( $this->options['url'] ) && $this->options['url'] == '1' ) echo 'checked'; ?> />
+	                <input type="checkbox" name="<?php echo esc_attr(COMMENT_STAR_RATING_DOMAIN); ?>[url]"  value="1" <?php if( isset( $this->options['url'] ) && $this->options['url'] == '1' ) echo 'checked'; ?> />
                	</p>
                	<p>
 					<strong>メールアドレスを外す</strong>
-	                <input type="checkbox" name="<?php echo esc_attr($this->text_domain); ?>[email]"  value="1" <?php if( isset( $this->options['email'] ) && $this->options['email'] == '1' ) echo 'checked'; ?> />
+	                <input type="checkbox" name="<?php echo esc_attr(COMMENT_STAR_RATING_DOMAIN); ?>[email]"  value="1" <?php if( isset( $this->options['email'] ) && $this->options['email'] == '1' ) echo 'checked'; ?> />
 	            </p>
 			    <p class="submit">
 			    	<input class="button-primary" type="submit" name='save' value='<?php _e('Save Changes') ?>' />
@@ -275,8 +274,8 @@ class CommentStarRating
 	    $post_types = wp_list_filter( get_post_types(array('public'=>true)),array('attachment'), 'NOT' );
 	    if (isset($_POST['save'])) {
 			if( check_admin_referer( 'csr-nonce-key', 'csr-key' ) ) {
-	        	if ( !empty($_POST[$this->text_domain]) ) {
-					$options = $_POST[$this->text_domain];
+	        	if ( !empty($_POST[COMMENT_STAR_RATING_DOMAIN]) ) {
+					$options = $_POST[COMMENT_STAR_RATING_DOMAIN];
 	        		// post_type sanitai
 	        		foreach ( $post_types as $post_type  ) {
 	        			if( isset($options['post_type'][$post_type]) ) {
@@ -289,12 +288,12 @@ class CommentStarRating
 	        		if( isset( $options['email'] ) && $options['email'] == '1' ) {
 	        			$options['email'] = '1';
 	        		}
-	        		update_option($this->text_domain, $options );
+	        		update_option(COMMENT_STAR_RATING_DOMAIN, $options );
 				}
-				//wp_safe_redirect( menu_page_url( $this->text_domain, false ) );
+				//wp_safe_redirect( menu_page_url( COMMENT_STAR_RATING_DOMAIN, false ) );
 	        }
 	    }
-        $this->options = get_option($this->text_domain);
+        $this->options = get_option(COMMENT_STAR_RATING_DOMAIN);
 		$this->admin_setting_form();
 	}
 }
