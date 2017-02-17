@@ -276,8 +276,8 @@ class CommentStarRating
 	    if (isset($_POST['save'])) {
 			if( check_admin_referer( 'csr-nonce-key', 'csr-key' ) ) {
 	        	if (isset($_POST[$this->text_domain]) && is_array($_POST[$this->text_domain]) ) {
-	        		$this->options = $_POST[$this->text_domain];
-	        		// post_type sanitaize
+					$this->options = filter_input(INPUT_POST, $this->options);
+	        		// post_type sanitai
 	        		foreach ( $post_types as $post_type  ) {
 	        			if( isset($this->options['post_type'][$post_type]) ) {
 		        			$this->options['post_type'][$post_type] = '1';
