@@ -59,7 +59,7 @@ class CommentStarRating
             'echo'      => false
 		));
 		if( $this->count > 0 ) {
-			$output .= '<p class="star-counter-tit">' . esc_html__('5つ星のうち', COMMENT_STAR_RATING_DOMAIN ) . number_format_i18n( (int)$this->average, 1 ) . '</p>' . '<div id="star-counter"></div>';
+			$output .= '<p class="star-counter-tit">' . esc_html__('5つ星のうち', COMMENT_STAR_RATING_DOMAIN ) . number_format_i18n( $this->average, 1 ) . '</p>' . '<div id="star-counter"></div>';
 		}
 		return $output;
 	}
@@ -82,11 +82,11 @@ class CommentStarRating
 		if( $this->count > 0 ) {
 			$this->average    = $this->total / $this->count;
 			$this->ratings_arrange = array_count_values($this->ratings);
-			// 未定義、空なら0を入れる
-			for ( $i = 1; $i <= 5; $i++) {
-				if( !isset($this->ratings_arrange[$i]) ) {
-					$this->ratings_arrange[$i] = 0;
-				}
+		}
+		// 未定義、空なら0を入れる
+		for ( $i = 1; $i <= 5; $i++) {
+			if( !isset($this->ratings_arrange[$i]) ) {
+				$this->ratings_arrange[$i] = 0;
 			}
 		}
 	}
@@ -176,7 +176,7 @@ class CommentStarRating
 		global $post;
 		$post_type = get_post_type();
 		$fields['rating'] = null;
-		if ( isset( $this->options['post_type'][$post_type] ) && $this->options['post_type'][$post_type] == 1  ) {
+		if ( isset( $this->options[$post_type] ) && $this->options[$post_type] == 1  ) {
 			$fields['rating'] .= '<div id="input-type-star"></div>';
 			$fields['rating'] .= '<input type="hidden" name="csr_rating" value="" />';
 		}
@@ -215,7 +215,7 @@ class CommentStarRating
 		$star = get_comment_meta( get_comment_ID(), 'csr_rating', true);
 		$star = isset( $star ) && is_numeric( $star ) ? $star : 3;
 
-		if ( isset( $this->options['post_type'][$post_type] ) && $this->options['post_type'][$post_type] == 1  ) {
+		if ( isset( $this->options[$post_type] ) && $this->options[$post_type] == 1  ) {
 			$output = wp_star_rating( array(
 			    'rating'    => $star,
 			    'type'      => 'rating',
@@ -244,11 +244,11 @@ class CommentStarRating
 				<?php wp_nonce_field( 'csr-nonce-key', 'csr-key' ); ?>
                 <h3><?php _e('有効にする投稿タイプを選択してください'); ?></h3>
 				<?php
-					foreach ( $post_types  as $post_type ) {
+					foreach ( $post_types as $post_type ) {
 				?>
 				<p>
 					<strong><?php echo esc_attr($post_type); ?>ページ上で有効にします</strong>
-                    <input type="checkbox" name="<?php echo esc_attr(COMMENT_STAR_RATING_DOMAIN); ?>[post_type][<?php echo esc_attr($post_type); ?>]"  value="1" <?php if( isset( $this->options['post_type'][$post_type] ) && $this->options['post_type'][$post_type] == '1' ) echo 'checked'; ?> />
+                    <input type="checkbox" name="<?php echo esc_attr(COMMENT_STAR_RATING_DOMAIN); ?>[<?php echo esc_attr($post_type); ?>]"  value="1" <?php if( isset( $this->options[$post_type] ) && $this->options[$post_type] == '1' ) echo 'checked'; ?> />
                 </p>
                 <?php 
             		} 
@@ -260,7 +260,7 @@ class CommentStarRating
                	</p>
                	<p>
 					<strong>メールアドレスを外す</strong>
-	                <input type="checkbox" name="<?php echo esc_attr(COMMENT_STAR_RATING_DOMAIN); ?>[email]"  value="1" <?php if( isset( $this->options['email'] ) && $this->options['email'] == '1' ) echo 'checked'; ?> />
+	                <input type="checkbox" name="<?php echo esc_attr(COMMENT_STAR_RATING_DOMAIN); ?>[email]"  value="1" <?php if( isset( $this->options['email'] ) && $this->options['email'] == '1' ) echo 'checked'; ?> /
 	            </p>
 			    <p class="submit">
 			    	<input class="button-primary" type="submit" name='save' value='<?php _e('Save Changes') ?>' />
@@ -272,22 +272,24 @@ class CommentStarRating
 	// save
 	function admin_save_options() {
 	    $post_types = wp_list_filter( get_post_types(array('public'=>true)),array('attachment'), 'NOT' );
+	    $key_array = array();
+	    foreach ( $post_types as $post_type ) {
+		    $key_array += array( $post_type );
+		}
+	    array_push( $key_array, 'url', 'email' );
 	    if (isset($_POST['save'])) {
 			if( check_admin_referer( 'csr-nonce-key', 'csr-key' ) ) {
 	        	if ( !empty($_POST[COMMENT_STAR_RATING_DOMAIN]) ) {
-					$options = $_POST[COMMENT_STAR_RATING_DOMAIN];
-	        		// post_type sanitai
-	        		foreach ( $post_types as $post_type  ) {
-	        			if( isset($options['post_type'][$post_type]) ) {
-		        			$options['post_type'][$post_type] = '1';
-		        		}
-	        		}
-	        		if( isset( $options['url'] ) && $options['url'] == '1' ) {
-	        			$options['url'] = '1';
-	        		}
-	        		if( isset( $options['email'] ) && $options['email'] == '1' ) {
-	        			$options['email'] = '1';
-	        		}
+	        		$options = array();
+					foreach ( $_POST[COMMENT_STAR_RATING_DOMAIN] as $key => $value ) {
+						if( in_array( $key, $key_array) ){
+							$key = $key;
+						}else{
+							break;
+						}
+						$value = '1';
+						$options += array( $key => $value );
+					}
 	        		update_option(COMMENT_STAR_RATING_DOMAIN, $options );
 				}
 				//wp_safe_redirect( menu_page_url( COMMENT_STAR_RATING_DOMAIN, false ) );
