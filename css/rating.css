@@ -1,31 +1,22 @@
-.comment-star {
-  background-image: url(../img/fivestar01.png);
-  background-size: contain;
-  background-repeat: no-repeat;
-  width: 100px;
-  height: 16px;
-}
-.comment-star-2 {background-image: url(../img/fivestar02.png);}
-.comment-star-3 {background-image: url(../img/fivestar03.png);}
-.comment-star-4 {background-image: url(../img/fivestar04.png);}
-.comment-star-5 {background-image: url(../img/fivestar05.png);}
-
 /* raty overwrite */
 #input-type-star .star-on-png,
 #input-type-star .star-off-png,
 #input-type-star .star-half-png {
-    font-family: dashicons;
+    font-family: FontAwesome;
     color: #daa520;
     font-size: 20px;
 }
 #input-type-star .star-on-png:before {
-	content: "\f155";
-}
-#input-type-star .star-off-png:before {
-    content: "\f154";
+    /*content: "\f155";*/
+    content: "\f005";
 }
 #input-type-star .star-half-png:before {
-	content: "\f459";
+    /*content: "\f459";*/
+    content: "\f123";
+}
+#input-type-star .star-off-png:before {
+    /*content: "\f154";*/
+    content: "\f006";
 }
 
 /* wp_star_rating() style */
@@ -36,21 +27,24 @@
   margin: 0.5em 0;
 }
 .star-rating .star-full:before {
-    content: "\f155";
+    /*content: "\f155";*/
+    content: "\f005";
 }
 
 .star-rating .star-half:before {
-    content: "\f459";
+    /*content: "\f459";*/
+    content: "\f123";
 }
 
 .star-rating .star-empty:before {
-    content: "\f154";
+    /*content: "\f154";*/
+    content: "\f006";
 }
 
 .star-rating .star {
     color: #daa520;
     display: inline-block;
-    font-family: dashicons;
+    font-family: FontAwesome;
     font-size: 20px;
     font-style: normal;
     font-weight: 400;

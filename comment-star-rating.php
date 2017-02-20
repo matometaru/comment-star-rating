@@ -11,26 +11,23 @@
 // wp_star_rating() を使うためのインクルード
 require_once(ABSPATH . 'wp-admin/includes/template.php');
 // settings
-define( "COMMENT_STAR_RATING_DIR", WP_PLUGIN_DIR."/comment-star-rating" );
-define( "COMMENT_STAR_RATING_URL", WP_PLUGIN_URL."/comment-star-rating" );
-define( "COMMENT_STAR_RATING_IMAGES_URL", COMMENT_STAR_RATING_URL."/images" );
 define( "COMMENT_STAR_RATING_DOMAIN", "comment-star-rating" );
 class CommentStarRating
 {
-    public $ratings;
-    public $total;
-    public $count;
-    public $average;
-    public $ratings_arrange;
-    function __construct() {
-		$path               = __FILE__;
-		$dir                = dirname( $path );
+	public $ratings;
+	public $total;
+	public $count;
+	public $average;
+	public $ratings_arrange;
+	function __construct() {
+        $path				= __FILE__;
+        $dir				= dirname( $path );
 		$this->ratings 		= array();
-        // $this->text-domain  = basename( $dir );
 		$this->name 		= 'CommentStarRating';
 		$this->prefix 		= 'csr_';
 		$this->options		= array();
-    }
+        $this->url			= plugins_url( '', $path );
+	}
 	function init() {
 		if ( is_admin() ) {
 			add_action( 'admin_menu', array( $this, 'admin_menu' ) );
@@ -53,10 +50,10 @@ class CommentStarRating
 	}
 	function shortcode( $atts ){
 		$output = wp_star_rating( array(
-            'rating'    => $this->average,
-            'type'      => 'rating',
-            'number'    => $this->count,
-            'echo'      => false
+			'rating'    => $this->average,
+			'type'      => 'rating',
+			'number'    => $this->count,
+			'echo'      => false
 		));
 		if( $this->count > 0 ) {
 			$output .= '<p class="star-counter-tit">' . esc_html__('5つ星のうち', COMMENT_STAR_RATING_DOMAIN ) . number_format_i18n( $this->average, 1 ) . '</p>' . '<div id="star-counter"></div>';
@@ -66,9 +63,9 @@ class CommentStarRating
 	function get_average_rating() {
 		global $post;
 		$comments = get_comments(array(
-		    'status' => 'approve',
-		    'number' => 700,
-		    'post_id'=> $post->ID,
+			'status' => 'approve',
+			'number' => 700,
+			'post_id'=> $post->ID,
 		));
 		// 合計、数、平均を取得
 		foreach($comments as $comment) {
@@ -163,13 +160,14 @@ class CommentStarRating
 		<?php
 	}
 	function wp_enqueue_styles() {
-   		wp_enqueue_style( 'dashicons', site_url('/')."/wp-includes/css/dashicons.min.css" );
-		wp_enqueue_style( 'csr-rating', COMMENT_STAR_RATING_URL.'/css/rating.css' );
-		wp_enqueue_style( 'csr-raty', COMMENT_STAR_RATING_URL.'/css/jquery.raty.css' );
+		//wp_enqueue_style( 'dashicons' );
+		wp_enqueue_style( 'font-awesome', '//netdna.bootstrapcdn.com/font-awesome/4.0.3/css/font-awesome.css' );
+		wp_enqueue_style( 'csr-rating',  $this->url . '/css/rating.css' );
+		wp_enqueue_style( 'csr-raty',  $this->url . '/css/jquery.raty.css' );
 	}
 	function wp_enqueue_scripts() {
-	  	wp_enqueue_script('d3',COMMENT_STAR_RATING_URL.'/js/d3.min.js', array('jquery'));
-	  	wp_enqueue_script('raty',COMMENT_STAR_RATING_URL.'/js/jquery.raty.js', array('jquery'));
+		wp_enqueue_script( 'd3', $this->url . '/js/d3.min.js', array('jquery') );
+		wp_enqueue_script( 'raty', $this->url . '/js/jquery.raty.js', array('jquery') );
 	}
 	// コメントに星入力フォームの追加・削除
 	function comment_form( $fields ) {
@@ -217,10 +215,10 @@ class CommentStarRating
 
 		if ( isset( $this->options[$post_type] ) && $this->options[$post_type] == 1  ) {
 			$output = wp_star_rating( array(
-			    'rating'    => $star,
-			    'type'      => 'rating',
-			    'number'    => 0,
-			    'echo'      => false,
+				'rating'    => $star,
+				'type'      => 'rating',
+				'number'    => 0,
+				'echo'      => false,
 			));
 			return $comment.$output;
 		}
@@ -242,45 +240,45 @@ class CommentStarRating
 			<h2><?php echo esc_attr($this->name); ?> &raquo; <?php _e('Settings'); ?></h2>
 			<form id="<?php echo esc_attr(COMMENT_STAR_RATING_DOMAIN); ?>" method="post" action="">
 				<?php wp_nonce_field( 'csr-nonce-key', 'csr-key' ); ?>
-                <h3><?php _e('有効にする投稿タイプを選択してください'); ?></h3>
+				<h3><?php _e('有効にする投稿タイプを選択してください'); ?></h3>
 				<?php
 					foreach ( $post_types as $post_type ) {
 				?>
 				<p>
 					<strong><?php echo esc_attr($post_type); ?>ページ上で有効にします</strong>
-                    <input type="checkbox" name="<?php echo esc_attr(COMMENT_STAR_RATING_DOMAIN); ?>[<?php echo esc_attr($post_type); ?>]"  value="1" <?php if( isset( $this->options[$post_type] ) && $this->options[$post_type] == '1' ) echo 'checked'; ?> />
-                </p>
-                <?php 
-            		} 
-                ?>
-                <h3>コメントの入力から外したい要素を選択</h3>
-                <p>
+					<input type="checkbox" name="<?php echo esc_attr(COMMENT_STAR_RATING_DOMAIN); ?>[<?php echo esc_attr($post_type); ?>]"  value="1" <?php if( isset( $this->options[$post_type] ) && $this->options[$post_type] == '1' ) echo 'checked'; ?> />
+				</p>
+				<?php 
+					} 
+				?>
+				<h3>コメントの入力から外したい要素を選択</h3>
+				<p>
 					<strong>URLを外す</strong>
-	                <input type="checkbox" name="<?php echo esc_attr(COMMENT_STAR_RATING_DOMAIN); ?>[url]"  value="1" <?php if( isset( $this->options['url'] ) && $this->options['url'] == '1' ) echo 'checked'; ?> />
-               	</p>
-               	<p>
+					<input type="checkbox" name="<?php echo esc_attr(COMMENT_STAR_RATING_DOMAIN); ?>[url]"  value="1" <?php if( isset( $this->options['url'] ) && $this->options['url'] == '1' ) echo 'checked'; ?> />
+				</p>
+				<p>
 					<strong>メールアドレスを外す</strong>
-	                <input type="checkbox" name="<?php echo esc_attr(COMMENT_STAR_RATING_DOMAIN); ?>[email]"  value="1" <?php if( isset( $this->options['email'] ) && $this->options['email'] == '1' ) echo 'checked'; ?> /
-	            </p>
-			    <p class="submit">
-			    	<input class="button-primary" type="submit" name='save' value='<?php _e('Save Changes') ?>' />
-			    </p>
+					<input type="checkbox" name="<?php echo esc_attr(COMMENT_STAR_RATING_DOMAIN); ?>[email]"  value="1" <?php if( isset( $this->options['email'] ) && $this->options['email'] == '1' ) echo 'checked'; ?> /
+				</p>
+				<p class="submit">
+					<input class="button-primary" type="submit" name='save' value='<?php _e('Save Changes') ?>' />
+				</p>
 			</form>
 		</div>
 		<?php
 	}
 	// save
 	function admin_save_options() {
-	    $post_types = wp_list_filter( get_post_types(array('public'=>true)),array('attachment'), 'NOT' );
-	    $key_array = array();
-	    foreach ( $post_types as $post_type ) {
-		    $key_array += array( $post_type );
+		$post_types = wp_list_filter( get_post_types(array('public'=>true)),array('attachment'), 'NOT' );
+		$key_array = array();
+		foreach ( $post_types as $post_type ) {
+			$key_array += array( $post_type );
 		}
-	    array_push( $key_array, 'url', 'email' );
-	    if (isset($_POST['save'])) {
+		array_push( $key_array, 'url', 'email' );
+		if (isset($_POST['save'])) {
 			if( check_admin_referer( 'csr-nonce-key', 'csr-key' ) ) {
-	        	if ( !empty($_POST[COMMENT_STAR_RATING_DOMAIN]) ) {
-	        		$options = array();
+				if ( !empty($_POST[COMMENT_STAR_RATING_DOMAIN]) ) {
+					$options = array();
 					foreach ( $_POST[COMMENT_STAR_RATING_DOMAIN] as $key => $value ) {
 						if( in_array( $key, $key_array) ){
 							$key = $key;
@@ -290,12 +288,12 @@ class CommentStarRating
 						$value = '1';
 						$options += array( $key => $value );
 					}
-	        		update_option(COMMENT_STAR_RATING_DOMAIN, $options );
+					update_option(COMMENT_STAR_RATING_DOMAIN, $options );
 				}
 				//wp_safe_redirect( menu_page_url( COMMENT_STAR_RATING_DOMAIN, false ) );
-	        }
-	    }
-        $this->options = get_option(COMMENT_STAR_RATING_DOMAIN);
+			}
+		}
+		$this->options = get_option(COMMENT_STAR_RATING_DOMAIN);
 		$this->admin_setting_form();
 	}
 }
