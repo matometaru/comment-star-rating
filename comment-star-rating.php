@@ -272,7 +272,7 @@ class CommentStarRating
 		$post_types = wp_list_filter( get_post_types(array('public'=>true)),array('attachment'), 'NOT' );
 		$key_array = array();
 		foreach ( $post_types as $post_type ) {
-			$key_array += array( $post_type );
+			array_push( $key_array, $post_type );
 		}
 		array_push( $key_array, 'url', 'email' );
 		if (isset($_POST['save'])) {
