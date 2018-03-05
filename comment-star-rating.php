@@ -20,13 +20,14 @@ class CommentStarRating
 	public $average;
 	public $ratings_arrange;
 	function __construct() {
-        $path				= __FILE__;
-        $dir				= dirname( $path );
-		$this->ratings 		= array();
-		$this->name 		= 'CommentStarRating';
-		$this->prefix 		= 'csr_';
-		$this->options		= array();
-        $this->url			= plugins_url( '', $path );
+        $path						= __FILE__;
+        $dir						= dirname( $path );
+		$this->ratings 				= array();
+		$this->name 				= 'CommentStarRating';
+		$this->prefix 				= 'csr_';
+		$this->options				= array();
+        $this->url					= plugins_url( '', $path );
+        // $this->enable_post_types 	= 
 	}
 	function init() {
 		if ( is_admin() ) {
@@ -34,10 +35,11 @@ class CommentStarRating
 		} else {
 			$this->options = get_option(COMMENT_STAR_RATING_DOMAIN);
 			add_action( 'wp',  array( $this, 'get_average_rating') );
-			add_action( 'wp_head', array( $this, 'd3_init' ) );
-			add_action( 'wp_head', array( $this, 'raty_init' ) );
+			add_action( 'wp',  array( $this, 'save_average_rating') );
 			add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_styles' ) );
-			add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_scripts' ) );
+			add_action( 'wp_footer', array( $this, 'd3_init' ) );
+			add_action( 'wp_footer', array( $this, 'raty_init' ) );
+			add_action( 'wp_footer', array( $this, 'wp_enqueue_scripts' ) );
 			// comment form
 			add_filter( 'comment_form_default_fields', array( $this, 'comment_form' ) );
 			// comment post
@@ -46,9 +48,10 @@ class CommentStarRating
 			add_action( 'comment_text', array( $this, 'comment_display' ) );
 			// shortcode
 			add_shortcode( 'comment_star_rating_total', array( $this, 'shortcode' ) );
+			add_shortcode( 'comment_star_rating_ranking', array( $this, 'shortcode_post_rankig' ) );
 		}
 	}
-	function shortcode( $atts ){
+	function shortcode( $atts ) {
 		$output = wp_star_rating( array(
 			'rating'    => $this->average,
 			'type'      => 'rating',
@@ -60,6 +63,15 @@ class CommentStarRating
 		}
 		return $output;
 	}
+	function shortcode_post_rankig( $atts ) {
+		if (isset($atts['post_type'])) {
+			$output = $this->get_average_ranking_html($atts['post_type']);
+		}else {
+			$output = $this->get_average_ranking_html();
+		}
+		return $output;
+	}
+	// 記事の各スコア・平均スコアを取得
 	function get_average_rating() {
 		global $post;
 		$comments = get_comments(array(
@@ -77,7 +89,7 @@ class CommentStarRating
 		$this->total      = array_sum($this->ratings);
 		$this->count      = count($this->ratings);
 		if( $this->count > 0 ) {
-			$this->average    = $this->total / $this->count;
+			$this->average    = number_format_i18n($this->total / $this->count, 1);
 			$this->ratings_arrange = array_count_values($this->ratings);
 		}
 		// 未定義、空なら0を入れる
@@ -86,6 +98,35 @@ class CommentStarRating
 				$this->ratings_arrange[$i] = 0;
 			}
 		}
+	}
+	// 記事の平均スコアをpost_metaに保存
+	function save_average_rating() {
+		global $post;
+		$post_id = $post->ID;
+		update_post_meta( $post_id, 'csr_average_rating', $this->average );
+	}
+	function get_average_ranking_html($post_type = "post") {
+		$args = array(
+			'post_type' => $post_type,
+			'posts_per_page' => 3,
+			'order' => 'DESC',
+			'meta_key'=>'csr_average_rating',
+			'orderby'=>'meta_value',
+		);
+		$posts = get_posts($args);
+		if( !empty( $posts ) ) :
+			$output = '<ul id="csr-ranking">';
+			foreach ( $posts as $post ) : setup_postdata( $post );
+				$output .= '<li>';
+				$output .= '<a href="' . get_permalink($post->ID) .'">' . get_the_title($post->ID) . '</a>';
+				$output .= '<span class="csr-ranking-score">' . get_post_meta( $post->ID, 'csr_average_rating', true ) . '</span>';
+				$output .= '</li>';
+			endforeach;
+			$output .= '</ul>';
+		else:
+			$output = "<p>記事がありません。</p>";
+		endif;
+		return $output;
 	}
 	function d3_init() {
 		// 一覧を出力 D3.js

@@ -1,3 +1,5 @@
+@charset "UTF-8";
+
 /* raty overwrite */
 #input-type-star .star-on-png,
 #input-type-star .star-off-png,
@@ -100,4 +102,38 @@
 
 .horizontal-bar-graph-num {
   padding: 0 0 0 10px;
+}
+
+/* #csr-ranking */
+#csr-ranking {
+  width: 100%;
+  max-width: 420px;
+  margin: 1em 0;
+}
+
+#csr-ranking li {
+  font-size: 14px;
+  counter-increment: li;
+  position: relative;
+  padding-left: 2.5em;
+}
+
+#csr-ranking li:before {
+  content: counter(li)"位";
+  position: absolute;
+  left: 0;
+}
+
+#csr-ranking li + li {
+  margin-top: 10px;
+}
+
+#csr-ranking .csr-ranking-score {
+  position: absolute;
+  top: -2px;
+  right: -2em;
+  border-radius: 50%;
+  background: #daa520;
+  color: #fff;
+  padding: .2em;
 }
