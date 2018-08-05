@@ -172,9 +172,9 @@ class CommentStarRating
 				"@context" : "http://schema.org",
 				"@type" : "AggregateRating",
 				"itemReviewed" : "Article", 
-				"ratingValue" : "<?php echo esc_js($this->average); ?>",
+				"ratingValue" : "<?php echo esc_js(number_format_i18n( $this->average, 1 )); ?>",
 				"bestRating" : "<?php echo esc_js(max($this->ratings)); ?>",
-				"worstRating" : "<?php echo esc_js(min($this->worstScore)); ?>",
+				"worstRating" : "<?php echo esc_js(min($this->ratings)); ?>",
 				"ratingCount" : "<?php echo esc_js($this->count); ?>"
 			}
 			</script>
