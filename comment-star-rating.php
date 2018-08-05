@@ -36,6 +36,7 @@ class CommentStarRating
 			add_action( 'wp',  array( $this, 'get_average_rating') );
 			add_action( 'wp_head', array( $this, 'd3_init' ) );
 			add_action( 'wp_head', array( $this, 'raty_init' ) );
+			add_action( 'wp_head', array( $this, 'json_ld' ) );
 			add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_styles' ) );
 			add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_scripts' ) );
 			// comment form
@@ -74,10 +75,10 @@ class CommentStarRating
 				array_push( $this->ratings, $star );
 			}
 		}
-		$this->total      = array_sum($this->ratings);
-		$this->count      = count($this->ratings);
+		$this->total = array_sum($this->ratings);
+		$this->count = count($this->ratings);
 		if( $this->count > 0 ) {
-			$this->average    = $this->total / $this->count;
+			$this->average = $this->total / $this->count;
 			$this->ratings_arrange = array_count_values($this->ratings);
 		}
 		// 未定義、空なら0を入れる
@@ -130,7 +131,6 @@ class CommentStarRating
 						segment
 							.append("div").classed("horizontal-bar-graph-num", true)
 							.text(function(d) { return d.value });
-
 					};
 
 					var graph = new HorizontalBarGraph('#star-counter', dataset);
@@ -156,6 +156,27 @@ class CommentStarRating
 						jQuery('input[name=csr_rating]').val(score);
 					});
 				});
+			</script>
+		<?php
+	}
+	function json_ld() {
+		// @type Articleを指定する際使うかも
+		// global $post;
+		// $post_id = $post->ID;
+		// $post_author = $post->post_author;
+		// $post_published_date = get_the_date("Y-m-d",$post_id);
+		// $post_modified_date = get_the_date("Y-m-d",null,$post_id);
+		?>
+			<script type="application/ld+json">
+			{
+				"@context" : "http://schema.org",
+				"@type" : "AggregateRating",
+				"itemReviewed" : "Article", 
+				"ratingValue" : "<?php echo esc_js($this->average); ?>",
+				"bestRating" : "<?php echo esc_js(max($this->ratings)); ?>",
+				"worstRating" : "<?php echo esc_js(min($this->worstScore)); ?>",
+				"ratingCount" : "<?php echo esc_js($this->count); ?>"
+			}
 			</script>
 		<?php
 	}
