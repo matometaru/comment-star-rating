@@ -10,7 +10,6 @@
  */
 // wp_star_rating() を使うためのインクルード.
 require_once ABSPATH . 'wp-admin/includes/template.php';
-define( 'COMMENT_STAR_RATING_DOMAIN', 'comment-star-rating' );
 
 /**
  * CommentStarRating
@@ -47,13 +46,15 @@ class CommentStarRating {
 	 */
 	private $ratings_arrange;
 
+	const NAME   = 'CommentStarRating';
+	const DOMAIN = 'comment-star-rating';
+
 	/**
 	 * Constructor.
 	 */
 	public function __construct() {
 		$path          = __FILE__;
 		$this->ratings = array();
-		$this->name    = 'CommentStarRating';
 		$this->prefix  = 'csr_';
 		$this->options = array();
 		$this->url     = plugins_url( '', $path );
@@ -66,7 +67,7 @@ class CommentStarRating {
 		if ( is_admin() ) {
 			add_action( 'admin_menu', array( $this, 'admin_menu' ) );
 		} else {
-			$this->options = get_option( COMMENT_STAR_RATING_DOMAIN );
+			$this->options = get_option( self::DOMAIN );
 			add_action( 'wp', array( $this, 'get_average_rating' ) );
 			add_action( 'wp_head', array( $this, 'd3_init' ) );
 			add_action( 'wp_head', array( $this, 'raty_init' ) );
@@ -94,7 +95,7 @@ class CommentStarRating {
 		);
 		if ( $this->count > 0 ) {
 			$output .= '<p class="star-counter-tit">';
-			$output .= esc_html__( '5つ星のうち', COMMENT_STAR_RATING_DOMAIN );
+			$output .= esc_html__( '5つ星のうち', self::DOMAIN );
 			$output .= number_format_i18n( $this->average, 1 );
 			$output .= '</p>';
 			$output .= '<div id="star-counter"></div>';
@@ -340,10 +341,10 @@ class CommentStarRating {
 	 */
 	public function admin_menu() {
 		add_options_page(
-			$this->name, // page_title.
-			$this->name, // menu_title.
+			self::NAME, // page_title.
+			self::NAME, // menu_title.
 			'manage_options', // capabiliity.
-			COMMENT_STAR_RATING_DOMAIN, // menu_slug.
+			self::DOMAIN, // menu_slug.
 			array( $this, 'admin_save_options' ) // callback.
 		);
 	}
@@ -352,8 +353,8 @@ class CommentStarRating {
 		$post_types = wp_list_filter( get_post_types( array( 'public' => true ) ), array( 'attachment' ), 'NOT' );
 		?>
 		<div class="wrap">
-			<h2><?php echo esc_attr( $this->name ); ?> &raquo; <?php _e( 'Settings' ); ?></h2>
-			<form id="<?php echo esc_attr( COMMENT_STAR_RATING_DOMAIN ); ?>" method="post" action="">
+			<h2><?php echo esc_attr( self::NAME ); ?> &raquo; <?php _e( 'Settings' ); ?></h2>
+			<form id="<?php echo esc_attr( self::DOMAIN ); ?>" method="post" action="">
 				<?php wp_nonce_field( 'csr-nonce-key', 'csr-key' ); ?>
 				<h3><?php _e( '有効にする投稿タイプを選択してください' ); ?></h3>
 				<?php
@@ -362,7 +363,7 @@ class CommentStarRating {
 					<p>
 						<strong><?php echo esc_attr( $post_type ); ?>ページ上で有効にします</strong>
 						<input type="checkbox"
-							   name="<?php echo esc_attr( COMMENT_STAR_RATING_DOMAIN ); ?>[<?php echo esc_attr( $post_type ); ?>]"
+							   name="<?php echo esc_attr( self::DOMAIN ); ?>[<?php echo esc_attr( $post_type ); ?>]"
 							   value="1"
 							<?php
 							if ( isset( $this->options[ $post_type ] ) && $this->options[ $post_type ] == '1' ) {
@@ -377,7 +378,7 @@ class CommentStarRating {
 				<h3>コメントの入力から外したい要素を選択</h3>
 				<p>
 					<strong>URLを外す</strong>
-					<input type="checkbox" name="<?php echo esc_attr( COMMENT_STAR_RATING_DOMAIN ); ?>[url]" value="1"
+					<input type="checkbox" name="<?php echo esc_attr( self::DOMAIN ); ?>[url]" value="1"
 						<?php
 						if ( isset( $this->options['url'] ) && $this->options['url'] == '1' ) {
 							echo 'checked';
@@ -387,7 +388,7 @@ class CommentStarRating {
 				</p>
 				<p>
 					<strong>メールアドレスを外す</strong>
-					<input type="checkbox" name="<?php echo esc_attr( COMMENT_STAR_RATING_DOMAIN ); ?>[email]" value="1"
+					<input type="checkbox" name="<?php echo esc_attr( self::DOMAIN ); ?>[email]" value="1"
 						<?php
 						if ( isset( $this->options['email'] ) && $this->options['email'] == '1' ) {
 							echo 'checked';
@@ -415,9 +416,9 @@ class CommentStarRating {
 		array_push( $key_array, 'url', 'email' );
 		if ( isset( $_POST['save'] ) ) {
 			if ( check_admin_referer( 'csr-nonce-key', 'csr-key' ) ) {
-				if ( ! empty( $_POST[ COMMENT_STAR_RATING_DOMAIN ] ) ) {
+				if ( ! empty( $_POST[ self::DOMAIN ] ) ) {
 					$options = array();
-					foreach ( $_POST[ COMMENT_STAR_RATING_DOMAIN ] as $key => $value ) {
+					foreach ( $_POST[ self::DOMAIN ] as $key => $value ) {
 						if ( in_array( $key, $key_array ) ) {
 							$key = $key;
 						} else {
@@ -426,11 +427,11 @@ class CommentStarRating {
 						$value   = '1';
 						$options += array( $key => $value );
 					}
-					update_option( COMMENT_STAR_RATING_DOMAIN, $options );
+					update_option( self::DOMAIN, $options );
 				}
 			}
 		}
-		$this->options = get_option( COMMENT_STAR_RATING_DOMAIN );
+		$this->options = get_option( self::DOMAIN );
 		$this->admin_setting_form();
 	}
 }
