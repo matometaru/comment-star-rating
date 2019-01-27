@@ -46,7 +46,7 @@ class CommentStarRating {
 	 */
 	private $ratings_arrange;
 
-	const NAME   = 'CommentStarRating';
+	const NAME = 'CommentStarRating';
 	const DOMAIN = 'comment-star-rating';
 
 	/**
@@ -268,17 +268,14 @@ class CommentStarRating {
 	 * @return array $fields wp comment fields.
 	 */
 	public function comment_form( $fields ) {
-		$post_type        = get_post_type();
-		$fields['rating'] = null;
-		if ( isset( $this->options[ $post_type ] ) && $this->options[ $post_type ] === 1 ) {
-			$fields['rating'] .= '<div id="input-type-star"></div>';
+		if ( $this->is_enabled_post_type() ) {
+			$fields['rating'] = '<div id="input-type-star"></div>';
 			$fields['rating'] .= '<input type="hidden" name="csr_rating" value="" />';
 		}
-		// オプション：不要フォームの削除.
-		if ( isset( $this->options['url'] ) && $this->options['url'] == 1 ) {
+		if ( $this->is_disabled_form_url() ) {
 			$fields['url'] = '';
 		}
-		if ( isset( $this->options['email'] ) && $this->options['email'] == 1 ) {
+		if ( $this->is_disabled_form_email() ) {
 			$fields['email'] = '';
 		}
 
@@ -294,9 +291,8 @@ class CommentStarRating {
 	 */
 	public function comment_post( $comment_id ) {
 		$_comment = get_comment( $comment_id );
-		$_post    = get_post( $_comment->comment_post_ID );
 		if ( ! is_user_logged_in() ) {
-			$rating = isset( $_POST['csr_rating'] ) && is_numeric( $_POST['csr_rating'] ) ? $_POST['csr_rating'] : 3;
+			$rating = isset( $_POST[self::COMMENT_META_KEY] ) && is_numeric( $_POST[self::COMMENT_META_KEY] ) ? $_POST[ self::COMMENT_META_KEY ] : 3;
 			$rating = intval( $rating );
 			if ( ! $rating ) {
 				$rating = '';
@@ -318,11 +314,9 @@ class CommentStarRating {
 	 * @return string $comment コメント.
 	 */
 	public function comment_display( $comment ) {
-		$post_type = get_post_type();
-		$star      = get_comment_meta( get_comment_ID(), 'csr_rating', true );
+		$star      = get_comment_meta( get_comment_ID(), self::COMMENT_META_KEY, true );
 		$star      = isset( $star ) && is_numeric( $star ) ? $star : 3;
-
-		if ( isset( $this->options[ $post_type ] ) && $this->options[ $post_type ] == 1 ) {
+		if ( $this->is_enabled_post_type() ) {
 			$output = wp_star_rating(
 				array(
 					'rating' => $star,
@@ -334,6 +328,39 @@ class CommentStarRating {
 
 			return $comment . $output;
 		}
+	}
+
+	/**
+	 * 現在の投稿タイプで有効か？
+	 *
+	 * @param string $post_type 投稿タイプ.
+	 *
+	 * @return boolean
+	 */
+	private function is_enabled_post_type( $post_type = null ) {
+		if ( null === $post_type ) {
+			$post_type = get_post_type();
+		}
+
+		return isset( $this->options[ $post_type ] ) && '1' === $this->options[ $post_type ];
+	}
+
+	/**
+	 * コメントフォームにURLの表示が無効か？
+	 *
+	 * @return boolean
+	 */
+	private function is_disabled_form_url() {
+		return isset( $this->options['url'] ) && '1' === $this->options['url'];
+	}
+
+	/**
+	 * コメントフォームにメールアドレスの表示が無効か？
+	 *
+	 * @return boolean
+	 */
+	private function is_disabled_form_email() {
+		return isset( $this->options['email'] ) && '1' === $this->options['email'];
 	}
 
 	/**
@@ -349,6 +376,9 @@ class CommentStarRating {
 		);
 	}
 
+	/**
+	 * 管理画面:オプション保存
+	 */
 	public function admin_setting_form() {
 		$post_types = wp_list_filter( get_post_types( array( 'public' => true ) ), array( 'attachment' ), 'NOT' );
 		?>
@@ -366,7 +396,7 @@ class CommentStarRating {
 							   name="<?php echo esc_attr( self::DOMAIN ); ?>[<?php echo esc_attr( $post_type ); ?>]"
 							   value="1"
 							<?php
-							if ( isset( $this->options[ $post_type ] ) && $this->options[ $post_type ] == '1' ) {
+							if ( $this->is_enabled_post_type( $post_type ) ) {
 								echo 'checked';
 							}
 							?>
@@ -380,7 +410,7 @@ class CommentStarRating {
 					<strong>URLを外す</strong>
 					<input type="checkbox" name="<?php echo esc_attr( self::DOMAIN ); ?>[url]" value="1"
 						<?php
-						if ( isset( $this->options['url'] ) && $this->options['url'] == '1' ) {
+						if ( $this->is_disabled_form_url() ) {
 							echo 'checked';
 						}
 						?>
@@ -390,7 +420,7 @@ class CommentStarRating {
 					<strong>メールアドレスを外す</strong>
 					<input type="checkbox" name="<?php echo esc_attr( self::DOMAIN ); ?>[email]" value="1"
 						<?php
-						if ( isset( $this->options['email'] ) && $this->options['email'] == '1' ) {
+						if ( $this->is_disabled_form_email() ) {
 							echo 'checked';
 						}
 						?>
