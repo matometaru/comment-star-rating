@@ -48,6 +48,7 @@ class CommentStarRating {
 
 	const NAME = 'CommentStarRating';
 	const DOMAIN = 'comment-star-rating';
+	const COMMENT_META_KEY = 'csr_rating';
 
 	/**
 	 * Constructor.
@@ -117,7 +118,7 @@ class CommentStarRating {
 		);
 		// 合計、数、平均を取得.
 		foreach ( $comments as $comment ) {
-			$star = get_comment_meta( $comment->comment_ID, 'csr_rating', true );
+			$star = get_comment_meta( $comment->comment_ID, self::COMMENT_META_KEY, true );
 			if ( ! empty( $star ) ) {
 				array_push( $this->ratings, $star );
 			}
@@ -289,7 +290,6 @@ class CommentStarRating {
 	 * @return int $comment_id コメントID.
 	 */
 	public function comment_post( $comment_id ) {
-		$_comment = get_comment( $comment_id );
 		if ( ! is_user_logged_in() ) {
 			$rating = isset( $_POST[self::COMMENT_META_KEY] ) && is_numeric( $_POST[self::COMMENT_META_KEY] ) ? $_POST[ self::COMMENT_META_KEY ] : 3;
 			$rating = intval( $rating );
@@ -299,7 +299,7 @@ class CommentStarRating {
 			if ( strlen( $rating ) > 1 ) {
 				$rating = substr( $rating, 0, 1 );
 			}
-			add_comment_meta( $comment_id, 'csr_rating', $rating );
+			add_comment_meta( $comment_id, self::COMMENT_META_KEY, $rating );
 		}
 
 		return $comment_id;
