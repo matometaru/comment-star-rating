@@ -55,7 +55,6 @@ class CommentStarRating {
 	public function __construct() {
 		$path          = __FILE__;
 		$this->ratings = array();
-		$this->prefix  = 'csr_';
 		$this->options = array();
 		$this->url     = plugins_url( '', $path );
 	}
