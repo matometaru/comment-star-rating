@@ -343,20 +343,49 @@ class CommentStarRating {
 	 * @return string $comment コメント.
 	 */
 	public function comment_display( $comment ) {
+		// スターがなければ通常コメントを返す.
 		$star = get_comment_meta( get_comment_ID(), self::COMMENT_META_KEY, true );
-		$star = isset( $star ) && is_numeric( $star ) ? $star : 3;
-		if ( $this->is_enabled_post_type() ) {
-			$output = wp_star_rating(
-				array(
-					'rating' => $star,
-					'type'   => 'rating',
-					'number' => 0,
-					'echo'   => false,
-				)
-			);
-
-			return $comment . $output;
+		if ( empty( $star ) ) {
+			return $comment;
 		}
+		$star = is_numeric( $star ) ? $star : 3;
+
+		// 投稿タイプが無効の場合も通常コメントを返す.
+		if ( ! $this->is_enabled_post_type() ) {
+			return $comment;
+		}
+
+		// ログインユーザーの場合も通常コメントを返す.
+		$general_user = $this->is_general_user( get_comment_ID() );
+		if ( ! $general_user ) {
+			return $comment;
+		}
+
+		// それ以外はレーティングを付与.
+		$output = wp_star_rating(
+			array(
+				'rating' => $star,
+				'type'   => 'rating',
+				'number' => 0,
+				'echo'   => false,
+			)
+		);
+		return $comment . $output;
+	}
+
+	/**
+	 * 一般ユーザーのコメントか？
+	 *
+	 * @param int $comment_id コメントID.
+	 *
+	 * @return boolean 一般ユーザーのコメントか.
+	 */
+	public function is_general_user( $comment_id ) {
+		// コメントしたユーザーの取得.
+		$comment_object = get_comment( $comment_id );
+		$comment_user   = $comment_object->user_id;
+		// 一般ユーザーはIDが0.
+		return '0' === $comment_user;
 	}
 
 	/**
