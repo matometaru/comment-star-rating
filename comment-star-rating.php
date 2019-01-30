@@ -52,8 +52,8 @@ class CommentStarRating {
 	 */
 	private $options;
 
-	const NAME             = 'CommentStarRating';
-	const DOMAIN           = 'comment-star-rating';
+	const NAME = 'CommentStarRating';
+	const DOMAIN = 'comment-star-rating';
 	const COMMENT_META_KEY = 'csr_rating';
 
 	/**
@@ -83,7 +83,7 @@ class CommentStarRating {
 			add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_scripts' ) );
 			add_filter( 'comment_form_default_fields', array( $this, 'filter_comment_form' ) );
 			add_filter( 'comment_form_fields', array( $this, 'add_star_field' ) );
-			add_action( 'comment_post', array( $this, 'comment_post' ) );
+			add_action( 'comment_post', array( $this, 'save_rating' ) );
 			add_action( 'comment_text', array( $this, 'comment_display' ) );
 			add_shortcode( 'comment_star_rating_total', array( $this, 'shortcode' ) );
 		}
@@ -303,26 +303,36 @@ class CommentStarRating {
 	}
 
 	/**
-	 * コメントの保存処理.
+	 * コメントの保存時: レーティングを保存する
 	 *
 	 * @param int $comment_id コメントID.
 	 *
 	 * @return int $comment_id コメントID.
 	 */
-	public function comment_post( $comment_id ) {
+	public function save_rating( $comment_id ) {
+		// 一般ユーザーのみレーティングを保存する.
 		if ( ! is_user_logged_in() ) {
-			$rating = isset( $_POST[ self::COMMENT_META_KEY ] ) && is_numeric( $_POST[ self::COMMENT_META_KEY ] ) ? $_POST[ self::COMMENT_META_KEY ] : 3;
-			$rating = intval( $rating );
-			if ( ! $rating ) {
-				$rating = '';
-			}
-			if ( strlen( $rating ) > 1 ) {
-				$rating = substr( $rating, 0, 1 );
-			}
+			$rating = $this->validate_rating();
 			add_comment_meta( $comment_id, self::COMMENT_META_KEY, $rating );
 		}
 
 		return $comment_id;
+	}
+
+	/**
+	 * $_POSTのCOMMENT_META_KEYを1~5の値で検証し、返す.
+	 *
+	 * @return int レーティング.
+	 */
+	public function validate_rating() {
+		$options = array(
+			'options' => array(
+				'default'   => 3,
+				'min_range' => 1,
+				'max_range' => 5,
+			),
+		);
+		return filter_input( INPUT_POST, self::COMMENT_META_KEY, FILTER_VALIDATE_INT, $options );
 	}
 
 	/**
@@ -500,6 +510,7 @@ class CommentStarRating {
 		return get_option( self::DOMAIN );
 	}
 }
-$url = plugins_url( '', __FILE__ );
+
+$url                 = plugins_url( '', __FILE__ );
 $comment_star_rating = new CommentStarRating( $url );
 $comment_star_rating->init();

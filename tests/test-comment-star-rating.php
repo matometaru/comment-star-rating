@@ -11,8 +11,8 @@
 class CommentStarRatingTest extends WP_UnitTestCase {
 
 	private $comment_star_rating;
-	private $cat1;
 	private $post1;
+	private $comment1;
 
 	const ENABLE_POST  = [ 'post' => '1' ];
 	const DISABLE_POST = [ 'post' => '0' ];
@@ -38,6 +38,9 @@ class CommentStarRatingTest extends WP_UnitTestCase {
 
 		// 投稿を作成.
 		$this->post1 = $this->factory->post->create();
+
+		// コメントを作成.
+		$this->comment1 = $this->factory->comment->create();
 	}
 
 	/**
@@ -88,5 +91,14 @@ class CommentStarRatingTest extends WP_UnitTestCase {
 		$actual = $this->comment_star_rating->filter_comment_form( $fields );
 		$this->assertEquals( null, $actual['email'] );
 		$this->assertEquals( null, $actual['url'] );
+	}
+
+	/**
+	 * Save rating.
+	 */
+	public function test_save_ratingでコメントメタにレーティングがデフォルト値の3が保存されてるか() {
+		$comment_id = $this->comment_star_rating->save_rating( $this->comment1 );
+		$actual = get_comment_meta( $comment_id, CommentStarRating::COMMENT_META_KEY, true );
+		$this->assertEquals( 3, $actual );
 	}
 }
