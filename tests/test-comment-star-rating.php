@@ -59,7 +59,8 @@ class CommentStarRatingTest extends WP_UnitTestCase {
 	/**
 	 * 管理画面側の設定
 	 */
-	public function test_初回の投稿タイプpostが無効になっているか() {
+	public function test_投稿タイプpostが無効になっているか() {
+		$this->setOptions( self::DISABLE_POST );
 		$actual = $this->comment_star_rating->is_enabled_post_type( 'post' );
 		$this->assertEquals( false, $actual );
 	}
@@ -72,5 +73,20 @@ class CommentStarRatingTest extends WP_UnitTestCase {
 		$post_type = get_post_type();
 		$actual = $this->comment_star_rating->is_enabled_post_type( $post_type );
 		$this->assertEquals( true, $actual );
+	}
+
+	/**
+	 * Filter_comment_form.
+	 */
+	public function test_filter_comment_formによりサイトの表示が消えてるか() {
+		$this->setOptions( self::ENABLE_EMAIL );
+		$this->setOptions( self::ENABLE_URL );
+		$fields = array(
+			'email' => 1,
+			'url'   => 2,
+		);
+		$actual = $this->comment_star_rating->filter_comment_form( $fields );
+		$this->assertEquals( null, $actual['email'] );
+		$this->assertEquals( null, $actual['url'] );
 	}
 }
