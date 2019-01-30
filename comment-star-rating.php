@@ -45,36 +45,44 @@ class CommentStarRating {
 	 * @var array $ratings_arrange 配列
 	 */
 	private $ratings_arrange;
+	/**
+	 * 設定オプション.
+	 *
+	 * @var int $options
+	 */
+	private $options;
 
-	const NAME = 'CommentStarRating';
-	const DOMAIN = 'comment-star-rating';
+	const NAME             = 'CommentStarRating';
+	const DOMAIN           = 'comment-star-rating';
 	const COMMENT_META_KEY = 'csr_rating';
 
 	/**
 	 * Constructor.
+	 *
+	 * @param string $url プラグインURL.
 	 */
-	public function __construct() {
-		$path          = __FILE__;
+	public function __construct( $url ) {
 		$this->ratings = array();
 		$this->options = array();
-		$this->url     = plugins_url( '', $path );
+		$this->url     = $url;
 	}
 
 	/**
 	 * Init all.
 	 */
 	public function init() {
+		$this->options = $this->get_options();
 		if ( is_admin() ) {
 			add_action( 'admin_menu', array( $this, 'admin_menu' ) );
 		} else {
-			$this->options = get_option( self::DOMAIN );
 			add_action( 'wp', array( $this, 'get_average_rating' ) );
 			add_action( 'wp_head', array( $this, 'd3_init' ) );
 			add_action( 'wp_head', array( $this, 'raty_init' ) );
 			add_action( 'wp_head', array( $this, 'json_ld' ) );
 			add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_styles' ) );
 			add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_scripts' ) );
-			add_filter( 'comment_form_default_fields', array( $this, 'comment_form' ) );
+			add_filter( 'comment_form_default_fields', array( $this, 'filter_comment_form' ) );
+			add_filter( 'comment_form_fields', array( $this, 'add_star_field' ) );
 			add_action( 'comment_post', array( $this, 'comment_post' ) );
 			add_action( 'comment_text', array( $this, 'comment_display' ) );
 			add_shortcode( 'comment_star_rating_total', array( $this, 'shortcode' ) );
@@ -261,22 +269,34 @@ class CommentStarRating {
 	}
 
 	/**
-	 * コメントに星入力フォームの追加・削除.
+	 * コメントフォーム要素の削除.
 	 *
 	 * @param array $fields wp comment fields.
 	 *
 	 * @return array $fields wp comment fields.
 	 */
-	public function comment_form( $fields ) {
-		if ( $this->is_enabled_post_type() ) {
-			$fields['rating'] = '<div id="input-type-star"></div>';
-			$fields['rating'] .= '<input type="hidden" name="csr_rating" value="" />';
-		}
+	public function filter_comment_form( $fields ) {
 		if ( $this->is_disabled_form_url() ) {
 			$fields['url'] = '';
 		}
 		if ( $this->is_disabled_form_email() ) {
 			$fields['email'] = '';
+		}
+
+		return $fields;
+	}
+
+	/**
+	 * コメントに星入力フォームの追加.
+	 *
+	 * @param array $fields wp comment fields.
+	 *
+	 * @return array $fields wp comment fields.
+	 */
+	public function add_star_field( $fields ) {
+		if ( $this->is_enabled_post_type() ) {
+			$fields['rating'] = '<div id="input-type-star"></div>';
+			$fields['rating'] .= '<input type="hidden" name="csr_rating" value="" />';
 		}
 
 		return $fields;
@@ -291,7 +311,7 @@ class CommentStarRating {
 	 */
 	public function comment_post( $comment_id ) {
 		if ( ! is_user_logged_in() ) {
-			$rating = isset( $_POST[self::COMMENT_META_KEY] ) && is_numeric( $_POST[self::COMMENT_META_KEY] ) ? $_POST[ self::COMMENT_META_KEY ] : 3;
+			$rating = isset( $_POST[ self::COMMENT_META_KEY ] ) && is_numeric( $_POST[ self::COMMENT_META_KEY ] ) ? $_POST[ self::COMMENT_META_KEY ] : 3;
 			$rating = intval( $rating );
 			if ( ! $rating ) {
 				$rating = '';
@@ -313,8 +333,8 @@ class CommentStarRating {
 	 * @return string $comment コメント.
 	 */
 	public function comment_display( $comment ) {
-		$star      = get_comment_meta( get_comment_ID(), self::COMMENT_META_KEY, true );
-		$star      = isset( $star ) && is_numeric( $star ) ? $star : 3;
+		$star = get_comment_meta( get_comment_ID(), self::COMMENT_META_KEY, true );
+		$star = isset( $star ) && is_numeric( $star ) ? $star : 3;
 		if ( $this->is_enabled_post_type() ) {
 			$output = wp_star_rating(
 				array(
@@ -336,7 +356,7 @@ class CommentStarRating {
 	 *
 	 * @return boolean
 	 */
-	private function is_enabled_post_type( $post_type = null ) {
+	public function is_enabled_post_type( $post_type = null ) {
 		if ( null === $post_type ) {
 			$post_type = get_post_type();
 		}
@@ -349,7 +369,7 @@ class CommentStarRating {
 	 *
 	 * @return boolean
 	 */
-	private function is_disabled_form_url() {
+	public function is_disabled_form_url() {
 		return isset( $this->options['url'] ) && '1' === $this->options['url'];
 	}
 
@@ -358,7 +378,7 @@ class CommentStarRating {
 	 *
 	 * @return boolean
 	 */
-	private function is_disabled_form_email() {
+	public function is_disabled_form_email() {
 		return isset( $this->options['email'] ) && '1' === $this->options['email'];
 	}
 
@@ -376,7 +396,7 @@ class CommentStarRating {
 	}
 
 	/**
-	 * 管理画面:オプション保存
+	 * 管理画面:オプション保存レイアウト
 	 */
 	public function admin_setting_form() {
 		$post_types = wp_list_filter( get_post_types( array( 'public' => true ) ), array( 'attachment' ), 'NOT' );
@@ -445,8 +465,8 @@ class CommentStarRating {
 		array_push( $key_array, 'url', 'email' );
 		if ( isset( $_POST['save'] ) ) {
 			if ( check_admin_referer( 'csr-nonce-key', 'csr-key' ) ) {
+				$options = array();
 				if ( ! empty( $_POST[ self::DOMAIN ] ) ) {
-					$options = array();
 					foreach ( $_POST[ self::DOMAIN ] as $key => $value ) {
 						if ( in_array( $key, $key_array ) ) {
 							$key = $key;
@@ -456,14 +476,30 @@ class CommentStarRating {
 						$value   = '1';
 						$options += array( $key => $value );
 					}
-					update_option( self::DOMAIN, $options );
 				}
+				$this->update_options( $options );
 			}
 		}
-		$this->options = get_option( self::DOMAIN );
 		$this->admin_setting_form();
 	}
-}
 
-$comment_star_rating = new CommentStarRating();
+	/**
+	 * オプションセット、保存.
+	 *
+	 * @param array $options オプション.
+	 */
+	public function update_options( $options ) {
+		$this->options = array_merge( $this->options, $options );
+		update_option( self::DOMAIN, $this->options );
+	}
+
+	/**
+	 * オプションゲッター.
+	 */
+	public function get_options() {
+		return get_option( self::DOMAIN );
+	}
+}
+$url = plugins_url( '', __FILE__ );
+$comment_star_rating = new CommentStarRating( $url );
 $comment_star_rating->init();
