@@ -5,6 +5,5 @@
   "scripts": {
     "phpcs": "phpcs --standard=WordPress ./comment-star-rating.php",
     "phpcbf": "phpcbf -p -s -v --standard=WordPress ./comment-star-rating.php",
-    "test": "./vendor/bin/phpunit --version"
   }
 }
