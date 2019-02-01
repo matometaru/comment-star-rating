@@ -22,12 +22,6 @@ class CommentStarRating {
 	 */
 	private $ratings;
 	/**
-	 * 評価の合計.
-	 *
-	 * @var array $total
-	 */
-	private $total;
-	/**
 	 * 全評価の数.
 	 *
 	 * @var int $count
@@ -117,24 +111,13 @@ class CommentStarRating {
 	 */
 	public function get_average_rating() {
 		global $post;
-		$comments = get_comments(
-			array(
-				'status'  => 'approve',
-				'number'  => 700,
-				'post_id' => $post->ID,
-			)
-		);
-		// 合計、数、平均を取得.
-		foreach ( $comments as $comment ) {
-			$star = get_comment_meta( $comment->comment_ID, self::COMMENT_META_KEY, true );
-			if ( ! empty( $star ) ) {
-				array_push( $this->ratings, $star );
-			}
-		}
-		$this->total = array_sum( $this->ratings );
+		$comments = $this->get_approved_comment( $post->ID );
+		$this->ratings = $this->generate_ratings_from_comments( $comments );
+		// レーティングの合計、レーティングの数を取得.
+		$total = array_sum( $this->ratings );
 		$this->count = count( $this->ratings );
 		if ( $this->count > 0 ) {
-			$this->average         = $this->total / $this->count;
+			$this->average         = $total / $this->count;
 			$this->ratings_arrange = array_count_values( $this->ratings );
 		}
 		// 未定義、空なら0を入れる.
@@ -143,6 +126,42 @@ class CommentStarRating {
 				$this->ratings_arrange[ $i ] = 0;
 			}
 		}
+	}
+
+	/**
+	 * コメントの配列からレーティングの配列に変換
+	 *
+	 * @param int $comments 投稿ID.
+	 *
+	 * @return array $comments
+	 */
+	public function generate_ratings_from_comments( $comments ) {
+		$ratings = [];
+		foreach ( $comments as $comment ) {
+			$star = get_comment_meta( $comment->comment_ID, self::COMMENT_META_KEY, true );
+			if ( ! empty( $star ) ) {
+				array_push( $ratings, $star );
+			}
+		}
+
+		return $ratings;
+	}
+	/**
+	 * Get approved comment.
+	 *
+	 * @param int $post_id 投稿ID.
+	 *
+	 * @return array $comments
+	 */
+	public function get_approved_comment( $post_id ) {
+		$comments = get_comments(
+			array(
+				'status'  => 'approve',
+				'post_id' => $post_id,
+			)
+		);
+
+		return $comments;
 	}
 
 	/**
