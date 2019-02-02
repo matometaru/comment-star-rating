@@ -408,8 +408,10 @@ class CommentStarRating {
 	public function save_rating( $comment_id ) {
 		// 一般ユーザーのみレーティングを保存する.
 		if ( ! is_user_logged_in() ) {
-			$rating = $this->validate_rating();
-			add_comment_meta( $comment_id, self::COMMENT_META_KEY, $rating );
+			$rating = $this->validate_rating( 3 );
+			echo "comment_id = {$comment_id}";
+			echo "rating = {$rating}";
+			add_comment_meta( $comment_id, self::COMMENT_META_KEY, $rating, false );
 		}
 
 		return $comment_id;
@@ -418,9 +420,10 @@ class CommentStarRating {
 	/**
 	 * $_POSTのCOMMENT_META_KEYを1~5の値で検証し、返す.
 	 *
+	 * @param void $rating ユーザー入力値.
 	 * @return int レーティング.
 	 */
-	public function validate_rating() {
+	public function validate_rating( $rating ) {
 		$options = array(
 			'options' => array(
 				'default'   => 3,
@@ -429,7 +432,7 @@ class CommentStarRating {
 			),
 		);
 
-		return filter_input( INPUT_POST, self::COMMENT_META_KEY, FILTER_VALIDATE_INT, $options );
+		return filter_var( $rating, FILTER_VALIDATE_INT, $options );
 	}
 
 	/**
