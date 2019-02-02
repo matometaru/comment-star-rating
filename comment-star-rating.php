@@ -110,17 +110,19 @@ class CommentStarRating {
 	 */
 	public function init_user_side() {
 		global $post;
-		$this->setup_comment_rating( $post->ID );
-		add_action( 'wp_head', array( $this, 'd3_init' ) );
-		add_action( 'wp_head', array( $this, 'raty_init' ) );
-		add_action( 'wp_head', array( $this, 'json_ld' ) );
-		add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_styles' ) );
-		add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_scripts' ) );
-		add_filter( 'comment_form_default_fields', array( $this, 'filter_comment_form' ) );
-		add_filter( 'comment_form_fields', array( $this, 'add_star_field' ) );
-		add_action( 'comment_post', array( $this, 'save_rating' ) );
-		add_action( 'comment_text', array( $this, 'comment_display' ) );
-		add_shortcode( 'comment_star_rating_total', array( $this, 'shortcode' ) );
+		if ( $this->is_enabled_post_type() ) {
+			$this->setup_comment_rating( $post->ID );
+			add_action( 'wp_head', array( $this, 'd3_init' ) );
+			add_action( 'wp_head', array( $this, 'raty_init' ) );
+			add_action( 'wp_head', array( $this, 'json_ld' ) );
+			add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_styles' ) );
+			add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_scripts' ) );
+			add_filter( 'comment_form_default_fields', array( $this, 'filter_comment_form' ) );
+			add_filter( 'comment_form_fields', array( $this, 'add_star_field' ) );
+			add_action( 'comment_post', array( $this, 'save_rating' ) );
+			add_action( 'comment_text', array( $this, 'comment_display' ) );
+			add_shortcode( 'comment_star_rating_total', array( $this, 'shortcode' ) );
+		}
 	}
 
 	/**
@@ -390,10 +392,8 @@ class CommentStarRating {
 	 * @return array $fields wp comment fields.
 	 */
 	public function add_star_field( $fields ) {
-		if ( $this->is_enabled_post_type() ) {
-			$fields['rating'] = '<div id="input-type-star"></div>';
-			$fields['rating'] .= '<input type="hidden" name="csr_rating" value="" />';
-		}
+		$fields['rating'] = '<div id="input-type-star"></div>';
+		$fields['rating'] .= '<input type="hidden" name="csr_rating" value="" />';
 
 		return $fields;
 	}
@@ -446,11 +446,6 @@ class CommentStarRating {
 			return $comment;
 		}
 		$star = is_numeric( $star ) ? $star : 3;
-
-		// 投稿タイプが無効の場合も通常コメントを返す.
-		if ( ! $this->is_enabled_post_type() ) {
-			return $comment;
-		}
 
 		// ログインユーザーの場合も通常コメントを返す.
 		$general_user = $this->is_general_user( get_comment_ID() );
