@@ -134,4 +134,19 @@ class CommentStarRatingTest extends WP_UnitTestCase {
 		$this->assertEquals( [ 5, 3 ], $actual );
 	}
 
+	/**
+	 * Arrange ratings.
+	 */
+	public function test_全評価配列が1_2_3_4_5をkeyに、評価数がvalueの配列() {
+		$actual = $this->comment_star_rating->arrange_ratings( [ 1, 1, 3, 5 ] );
+		$expected = [
+			'1' => 2,
+			'2' => 0,
+			'3' => 1,
+			'4' => 0,
+			'5' => 1,
+		];
+		$this->assertEquals( $expected, $actual );
+	}
+
 }

@@ -112,21 +112,56 @@ class CommentStarRating {
 	public function calculate_average_rating() {
 		global $post;
 		$comments = $this->get_approved_comment( $post->ID );
-		$this->ratings = $this->generate_ratings_from_comments( $comments );
+		$ratings  = $this->generate_ratings_from_comments( $comments );
 		// レーティングの合計、レーティングの数を取得.
-		$total = array_sum( $this->ratings );
-		$this->count = count( $this->ratings );
+		$total = array_sum( $ratings );
+		$count = count( $ratings );
 		if ( $this->count <= 0 ) {
 			return;
 		}
 		$this->average         = $total / $this->count;
-		$this->ratings_arrange = array_count_values( $this->ratings );
+		$this->count_ratings( $ratings );
+
+		// $arranged_ratings = $this->arrange_ratings( $ratings );
+	}
+
+	/**
+	 * レーティングを整理する.
+	 *
+	 * @param array $ratings 全評価配列.
+	 *
+	 * @return array $arranged_ratings 1,2,3,4,5をkeyに、評価数がvalueの配列.
+	 */
+	public function arrange_ratings( $ratings ) {
+		$arranged_ratings = array_count_values( $ratings );
 		// 未定義、空なら0を入れる.
 		for ( $i = 1; $i <= 5; $i ++ ) {
-			if ( ! isset( $this->ratings_arrange[ $i ] ) ) {
-				$this->ratings_arrange[ $i ] = 0;
+			if ( ! isset( $arranged_ratings[ $i ] ) ) {
+				$arranged_ratings[ $i ] = 0;
 			}
 		}
+		ksort( $arranged_ratings );
+
+		return $arranged_ratings;
+	}
+
+	/**
+	 * レーティングを数える
+	 *
+	 * @param int $comments 投稿ID.
+	 *
+	 * @return array $comments
+	 */
+	public function count_ratings( $comments ) {
+		$ratings = [];
+		foreach ( $comments as $comment ) {
+			$star = get_comment_meta( $comment->comment_ID, self::COMMENT_META_KEY, true );
+			if ( ! empty( $star ) ) {
+				array_push( $ratings, $star );
+			}
+		}
+
+		return $ratings;
 	}
 
 	/**
@@ -147,6 +182,7 @@ class CommentStarRating {
 
 		return $ratings;
 	}
+
 	/**
 	 * Get approved comment.
 	 *
@@ -352,6 +388,7 @@ class CommentStarRating {
 				'max_range' => 5,
 			),
 		);
+
 		return filter_input( INPUT_POST, self::COMMENT_META_KEY, FILTER_VALIDATE_INT, $options );
 	}
 
@@ -390,6 +427,7 @@ class CommentStarRating {
 				'echo'   => false,
 			)
 		);
+
 		return $comment . $output;
 	}
 
@@ -404,6 +442,7 @@ class CommentStarRating {
 		// コメントしたユーザーの取得.
 		$comment_object = get_comment( $comment_id );
 		$comment_user   = $comment_object->user_id;
+
 		// 一般ユーザーはIDが0.
 		return '0' === $comment_user;
 	}
