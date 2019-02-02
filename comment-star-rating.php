@@ -69,7 +69,7 @@ class CommentStarRating {
 		if ( is_admin() ) {
 			add_action( 'admin_menu', array( $this, 'admin_menu' ) );
 		} else {
-			add_action( 'wp', array( $this, 'get_average_rating' ) );
+			add_action( 'wp', array( $this, 'calculate_average_rating' ) );
 			add_action( 'wp_head', array( $this, 'd3_init' ) );
 			add_action( 'wp_head', array( $this, 'raty_init' ) );
 			add_action( 'wp_head', array( $this, 'json_ld' ) );
@@ -107,19 +107,20 @@ class CommentStarRating {
 	}
 
 	/**
-	 * Get average rating.
+	 * Calculate average rating.
 	 */
-	public function get_average_rating() {
+	public function calculate_average_rating() {
 		global $post;
 		$comments = $this->get_approved_comment( $post->ID );
 		$this->ratings = $this->generate_ratings_from_comments( $comments );
 		// レーティングの合計、レーティングの数を取得.
 		$total = array_sum( $this->ratings );
 		$this->count = count( $this->ratings );
-		if ( $this->count > 0 ) {
-			$this->average         = $total / $this->count;
-			$this->ratings_arrange = array_count_values( $this->ratings );
+		if ( $this->count <= 0 ) {
+			return;
 		}
+		$this->average         = $total / $this->count;
+		$this->ratings_arrange = array_count_values( $this->ratings );
 		// 未定義、空なら0を入れる.
 		for ( $i = 1; $i <= 5; $i ++ ) {
 			if ( ! isset( $this->ratings_arrange[ $i ] ) ) {
