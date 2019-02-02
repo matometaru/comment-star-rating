@@ -101,18 +101,26 @@ class CommentStarRating {
 		if ( is_admin() ) {
 			add_action( 'admin_menu', array( $this, 'admin_menu' ) );
 		} else {
-			add_action( 'wp', array( $this, 'setup_comment_rating' ) );
-			add_action( 'wp_head', array( $this, 'd3_init' ) );
-			add_action( 'wp_head', array( $this, 'raty_init' ) );
-			add_action( 'wp_head', array( $this, 'json_ld' ) );
-			add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_styles' ) );
-			add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_scripts' ) );
-			add_filter( 'comment_form_default_fields', array( $this, 'filter_comment_form' ) );
-			add_filter( 'comment_form_fields', array( $this, 'add_star_field' ) );
-			add_action( 'comment_post', array( $this, 'save_rating' ) );
-			add_action( 'comment_text', array( $this, 'comment_display' ) );
-			add_shortcode( 'comment_star_rating_total', array( $this, 'shortcode' ) );
+			add_action( 'wp', array( $this, 'init_user_side' ) );
 		}
+	}
+
+	/**
+	 * ユーザー表示側の初期化処理
+	 */
+	public function init_user_side() {
+		global $post;
+		$this->setup_comment_rating( $post->ID );
+		add_action( 'wp_head', array( $this, 'd3_init' ) );
+		add_action( 'wp_head', array( $this, 'raty_init' ) );
+		add_action( 'wp_head', array( $this, 'json_ld' ) );
+		add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_styles' ) );
+		add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_scripts' ) );
+		add_filter( 'comment_form_default_fields', array( $this, 'filter_comment_form' ) );
+		add_filter( 'comment_form_fields', array( $this, 'add_star_field' ) );
+		add_action( 'comment_post', array( $this, 'save_rating' ) );
+		add_action( 'comment_text', array( $this, 'comment_display' ) );
+		add_shortcode( 'comment_star_rating_total', array( $this, 'shortcode' ) );
 	}
 
 	/**
@@ -139,11 +147,12 @@ class CommentStarRating {
 	}
 
 	/**
-	 * 集計に必要なデータをセット.
+	 * 投稿IDの集計に必要なデータをセット.
+	 *
+	 * @param int $post_id 投稿ID.
 	 */
-	public function setup_comment_rating() {
-		global $post;
-		$comments = $this->get_approved_comment( $post->ID );
+	public function setup_comment_rating( $post_id ) {
+		$comments = $this->get_approved_comment( $post_id );
 		$ratings  = $this->generate_ratings_from_comments( $comments );
 		$this->set_ratings( $ratings );
 

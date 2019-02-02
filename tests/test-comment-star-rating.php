@@ -164,8 +164,7 @@ class CommentStarRatingTest extends WP_UnitTestCase {
 	 * Setup comment rating.
 	 */
 	public function test_初回設定値に期待通りの値が入っているか() {
-		$this->go_to( '/?p=' . $this->post1 );
-		$this->comment_star_rating->setup_comment_rating();
+		$this->comment_star_rating->setup_comment_rating($this->post1);
 		$expected = [
 			'1' => 0,
 			'2' => 0,
