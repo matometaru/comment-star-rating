@@ -149,4 +149,35 @@ class CommentStarRatingTest extends WP_UnitTestCase {
 		$this->assertEquals( $expected, $actual );
 	}
 
+	/**
+	 * Calculate average rating.
+	 */
+	public function test_post1のコメントの平均値が4か() {
+		$comments = $this->comment_star_rating->get_approved_comment( $this->post1 );
+		$ratings  = $this->comment_star_rating->generate_ratings_from_comments( $comments );
+		$actual = $this->comment_star_rating->calculate_average_rating( $ratings );
+		$this->assertEquals( 4, $actual );
+	}
+
+
+	/**
+	 * Setup comment rating.
+	 */
+	public function test_初回設定値に期待通りの値が入っているか() {
+		$this->go_to( '/?p=' . $this->post1 );
+		$this->comment_star_rating->setup_comment_rating();
+		$expected = [
+			'1' => 0,
+			'2' => 0,
+			'3' => 1,
+			'4' => 0,
+			'5' => 1,
+		];
+
+		$this->assertEquals( [ 5, 3 ], $this->comment_star_rating->get_ratings() );
+		$this->assertEquals( 2, $this->comment_star_rating->get_rating_count() );
+		$this->assertEquals( 4, $this->comment_star_rating->get_average() );
+		$this->assertEquals( $expected, $this->comment_star_rating->get_arranged_ratings() );
+	}
+
 }

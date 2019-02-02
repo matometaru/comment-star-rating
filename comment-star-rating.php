@@ -24,9 +24,9 @@ class CommentStarRating {
 	/**
 	 * 全評価の数.
 	 *
-	 * @var int $count
+	 * @var int $rating_count
 	 */
-	private $count;
+	private $rating_count;
 	/**
 	 * 全評価の平均.
 	 *
@@ -38,7 +38,7 @@ class CommentStarRating {
 	 *
 	 * @var array $ratings_arrange 配列
 	 */
-	private $ratings_arrange;
+	private $arranged_ratings;
 	/**
 	 * 設定オプション.
 	 *
@@ -49,6 +49,38 @@ class CommentStarRating {
 	const NAME = 'CommentStarRating';
 	const DOMAIN = 'comment-star-rating';
 	const COMMENT_META_KEY = 'csr_rating';
+
+	public function get_ratings() {
+		return $this->ratings;
+	}
+
+	public function set_ratings( $ratings ) {
+		$this->ratings = $ratings;
+	}
+
+	public function get_rating_count() {
+		return $this->rating_count;
+	}
+
+	public function set_rating_count( $rating_count ) {
+		$this->rating_count = $rating_count;
+	}
+
+	public function get_average() {
+		return $this->average;
+	}
+
+	public function set_average( $average ) {
+		$this->average = $average;
+	}
+
+	public function get_arranged_ratings() {
+		return $this->arranged_ratings;
+	}
+
+	public function set_arranged_ratings( $arranged_ratings ) {
+		$this->arranged_ratings = $arranged_ratings;
+	}
 
 	/**
 	 * Constructor.
@@ -69,7 +101,7 @@ class CommentStarRating {
 		if ( is_admin() ) {
 			add_action( 'admin_menu', array( $this, 'admin_menu' ) );
 		} else {
-			add_action( 'wp', array( $this, 'calculate_average_rating' ) );
+			add_action( 'wp', array( $this, 'setup_comment_rating' ) );
 			add_action( 'wp_head', array( $this, 'd3_init' ) );
 			add_action( 'wp_head', array( $this, 'raty_init' ) );
 			add_action( 'wp_head', array( $this, 'json_ld' ) );
@@ -91,11 +123,11 @@ class CommentStarRating {
 			array(
 				'rating' => $this->average,
 				'type'   => 'rating',
-				'number' => $this->count,
+				'number' => $this->rating_count,
 				'echo'   => false,
 			)
 		);
-		if ( $this->count > 0 ) {
+		if ( $this->rating_count > 0 ) {
 			$output .= '<p class="star-counter-tit">';
 			$output .= esc_html__( '5つ星のうち', self::DOMAIN );
 			$output .= number_format_i18n( $this->average, 1 );
@@ -107,22 +139,40 @@ class CommentStarRating {
 	}
 
 	/**
-	 * Calculate average rating.
+	 * 集計に必要なデータをセット.
 	 */
-	public function calculate_average_rating() {
+	public function setup_comment_rating() {
 		global $post;
 		$comments = $this->get_approved_comment( $post->ID );
 		$ratings  = $this->generate_ratings_from_comments( $comments );
-		// レーティングの合計、レーティングの数を取得.
-		$total = array_sum( $ratings );
+		$this->set_ratings( $ratings );
+
+		$rating_count = count( $ratings );
+		$this->set_rating_count( $rating_count );
+
+		$average = $this->calculate_average_rating( $ratings );
+		$this->set_average( $average );
+
+		$arranged_ratings = $this->arrange_ratings( $ratings );
+		$this->set_arranged_ratings( $arranged_ratings );
+	}
+
+	/**
+	 * 評価平均値を取得する.
+	 *
+	 * @param array $ratings 評価配列.
+	 *
+	 * @return int 平均値
+	 */
+	public function calculate_average_rating( $ratings ) {
 		$count = count( $ratings );
-		if ( $this->count <= 0 ) {
+		if ( $count <= 0 ) {
 			return;
 		}
-		$this->average         = $total / $this->count;
-		$this->count_ratings( $ratings );
+		$total        = array_sum( $ratings );
+		$rating_count = $total / $count;
 
-		// $arranged_ratings = $this->arrange_ratings( $ratings );
+		return $rating_count;
 	}
 
 	/**
@@ -143,25 +193,6 @@ class CommentStarRating {
 		ksort( $arranged_ratings );
 
 		return $arranged_ratings;
-	}
-
-	/**
-	 * レーティングを数える
-	 *
-	 * @param int $comments 投稿ID.
-	 *
-	 * @return array $comments
-	 */
-	public function count_ratings( $comments ) {
-		$ratings = [];
-		foreach ( $comments as $comment ) {
-			$star = get_comment_meta( $comment->comment_ID, self::COMMENT_META_KEY, true );
-			if ( ! empty( $star ) ) {
-				array_push( $ratings, $star );
-			}
-		}
-
-		return $ratings;
 	}
 
 	/**
@@ -222,7 +253,7 @@ class CommentStarRating {
 				};
 				HorizontalBarGraph.prototype.draw = function () {
 					var x = d3.scaleLinear()
-						.domain([0, <?php echo esc_js( $this->count ); ?>])
+						.domain([0, <?php echo esc_js( $this->rating_count ); ?>])
 						.range([0, 100]);
 
 					var segment = this.el
@@ -301,7 +332,7 @@ class CommentStarRating {
 				"ratingValue": "<?php echo esc_js( number_format_i18n( $this->average, 1 ) ); ?>",
 				"bestRating": "<?php echo esc_js( max( $this->ratings ) ); ?>",
 				"worstRating": "<?php echo esc_js( min( $this->ratings ) ); ?>",
-				"ratingCount": "<?php echo esc_js( $this->count ); ?>"
+				"ratingCount": "<?php echo esc_js( $this->rating_count ); ?>"
 			}
 		</script>
 		<?php
