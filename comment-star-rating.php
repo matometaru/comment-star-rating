@@ -410,7 +410,7 @@ class CommentStarRating {
 	public function save_rating( $comment_id ) {
 		// 一般ユーザーのみレーティングを保存する.
 		if ( ! is_user_logged_in() ) {
-			$rating = $this->validate_rating( 10 );
+			$rating = $this->validate_rating( $_POST[ self::COMMENT_META_KEY ] );
 			add_comment_meta( $comment_id, 'csr_rating', $rating );
 		}
 
@@ -445,13 +445,13 @@ class CommentStarRating {
 	 */
 	public function comment_display( $comment ) {
 		// スターがなければ通常コメントを返す.
-		$star = get_comment_meta( get_comment_ID(), self::COMMENT_META_KEY, true );
-		if ( empty( $star ) ) {
+		$rating = get_comment_meta( get_comment_ID(), self::COMMENT_META_KEY, true );
+		if ( empty( $rating ) ) {
 			return $comment;
 		}
-		$star = is_numeric( $star ) ? $star : 3;
+		$rating = $this->validate_rating( $rating );
 
-		// ログインユーザーの場合も通常コメントを返す.
+		// コメントしたユーザーがログインユーザーの場合も通常コメントを返す.
 		$general_user = $this->is_general_user( get_comment_ID() );
 		if ( ! $general_user ) {
 			return $comment;
@@ -460,7 +460,7 @@ class CommentStarRating {
 		// それ以外はレーティングを付与.
 		$output = wp_star_rating(
 			array(
-				'rating' => $star,
+				'rating' => $rating,
 				'type'   => 'rating',
 				'number' => 0,
 				'echo'   => false,

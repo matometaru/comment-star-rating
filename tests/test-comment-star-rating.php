@@ -103,12 +103,23 @@ class CommentStarRatingTest extends WP_UnitTestCase {
 	/**
 	 * Save rating.
 	 */
-	public function test_save_ratingでコメントメタにレーティングがデフォルト値の3が保存されてるか() {
+	public function test_save_ratingでコメントメタに不正な値が送られた場合デフォルト値の3が保存されてるか() {
 		$comment_id = $this->factory->comment->create( array( 'comment_post_ID' => $this->post2 ) );
 
+		$_POST['csr_rating'] = 'abc';
 		$comment_id = $this->comment_star_rating->save_rating( $comment_id );
 		$actual     = get_comment_meta( $comment_id, CommentStarRating::COMMENT_META_KEY, true );
 		$this->assertEquals( 3, $actual );
+	}
+
+	/**
+	 * Save rating.
+	 */
+	public function test_save_ratingでコメントメタに5が保存されてるか() {
+		$_POST['csr_rating'] = 5;
+		$comment_id = $this->comment_star_rating->save_rating( $this->comment1 );
+		$actual     = get_comment_meta( $comment_id, CommentStarRating::COMMENT_META_KEY, true );
+		$this->assertEquals( 5, $actual );
 	}
 
 	/**
