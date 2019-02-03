@@ -89,8 +89,8 @@ class CommentStarRatingTest extends WP_UnitTestCase {
 	 * Filter_comment_form.
 	 */
 	public function test_filter_comment_formによりサイトの表示が消えてるか() {
-		$this->setOptions( self::ENABLE_EMAIL );
-		$this->setOptions( self::ENABLE_URL );
+		$options = array_merge( self::ENABLE_EMAIL, self::ENABLE_URL );
+		$this->setOptions( $options );
 		$fields = array(
 			'email' => 1,
 			'url'   => 2,

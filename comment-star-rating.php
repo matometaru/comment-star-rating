@@ -4,7 +4,7 @@
  * Description: WordPress plugin to rate comments on 5 beautiful stars.
  * Author: Matometaru
  * Author URI: http://matometaru.com/
- * Version: 1.1
+ * Version: 1.2
  * License: GPLv3
  * License URI: http://www.gnu.org/licenses/gpl-3.0
  */
@@ -46,6 +46,12 @@ class CommentStarRating {
 	 * @var int $options
 	 */
 	private $options;
+	/**
+	 * 現在ページの投稿ID.
+	 *
+	 * @var int $current_post_id
+	 */
+	private $current_post_id;
 
 	const NAME = 'CommentStarRating';
 	const DOMAIN = 'comment-star-rating';
@@ -115,6 +121,7 @@ class CommentStarRating {
 	 */
 	public function init_wp_after_hooks() {
 		global $post;
+		$this->current_post_id = $post->ID;
 		if ( $this->is_enabled_post_type() ) {
 			$this->setup_comment_rating( $post->ID );
 			add_action( 'wp_head', array( $this, 'd3_init' ) );
@@ -122,7 +129,9 @@ class CommentStarRating {
 			add_action( 'wp_head', array( $this, 'json_ld' ) );
 			add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_styles' ) );
 			add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_scripts' ) );
+			// ショートコード.
 			add_shortcode( 'comment_star_rating_total', array( $this, 'shortcode' ) );
+			add_shortcode( 'comment_star_rating_ranking', array( $this, 'shortcode_post_ranking' ) );
 		}
 	}
 
@@ -150,6 +159,56 @@ class CommentStarRating {
 	}
 
 	/**
+	 * Shortcode.
+	 *
+	 * @param array $atts 投稿タイプ文字列.
+	 *
+	 * @return string $outpu HTMLコード.
+	 */
+	public function shortcode_post_ranking( $atts ) {
+		if ( isset( $atts['post_type'] ) ) {
+			$output = $this->get_average_ranking_html( $atts['post_type'] );
+		} else {
+			$output = $this->get_average_ranking_html();
+		}
+
+		return $output;
+	}
+
+	/**
+	 * Shortcode.
+	 *
+	 * @param string $post_type 投稿タイプ文字列.
+	 *
+	 * @return string $html HTMLコード.
+	 */
+	public function get_average_ranking_html( $post_type = 'post' ) {
+		$args  = array(
+			'post_type'      => $post_type,
+			'posts_per_page' => 3,
+			'order'          => 'DESC',
+			'meta_key'       => 'csr_average_rating',
+			'orderby'        => 'meta_value',
+		);
+		$posts = get_posts( $args );
+		if ( ! empty( $posts ) ) {
+			$output = '<ul id="csr-ranking">';
+			foreach ( $posts as $post ) {
+				setup_postdata( $post );
+				$output .= '<li>';
+				$output .= '<a href="' . get_permalink( $post->ID ) . '">' . get_the_title( $post->ID ) . '</a>';
+				$output .= '<span class="csr-ranking-score">' . get_post_meta( $post->ID, 'csr_average_rating', true ) . '</span>';
+				$output .= '</li>';
+			}
+			$output .= '</ul>';
+		} else {
+			$output = '<p>評価された記事がありません。</p>';
+		}
+
+		return $output;
+	}
+
+	/**
 	 * 投稿IDの集計に必要なデータをセット.
 	 *
 	 * @param int $post_id 投稿ID.
@@ -167,6 +226,7 @@ class CommentStarRating {
 
 		$arranged_ratings = $this->arrange_ratings( $ratings );
 		$this->set_arranged_ratings( $arranged_ratings );
+		update_post_meta( $this->current_post_id, 'csr_average_rating', $this->average );
 	}
 
 	/**
@@ -182,9 +242,9 @@ class CommentStarRating {
 			return;
 		}
 		$total        = array_sum( $ratings );
-		$rating_count = $total / $count;
+		$average_rating = number_format_i18n($total / $count, 1);
 
-		return $rating_count;
+		return $average_rating;
 	}
 
 	/**
@@ -254,11 +314,11 @@ class CommentStarRating {
 		<script>
 			document.addEventListener('DOMContentLoaded', function () {
 				var dataset = [
-					{label: "5つ星", value: <?php echo esc_js( $this->ratings_arrange[5] ); ?>},
-					{label: "4つ星", value: <?php echo esc_js( $this->ratings_arrange[4] ); ?>},
-					{label: "3つ星", value: <?php echo esc_js( $this->ratings_arrange[3] ); ?>},
-					{label: "2つ星", value: <?php echo esc_js( $this->ratings_arrange[2] ); ?>},
-					{label: "1つ星", value: <?php echo esc_js( $this->ratings_arrange[1] ); ?>},
+					{label: "5つ星", value: <?php echo esc_js( $this->arranged_ratings[5] ); ?>},
+					{label: "4つ星", value: <?php echo esc_js( $this->arranged_ratings[4] ); ?>},
+					{label: "3つ星", value: <?php echo esc_js( $this->arranged_ratings[3] ); ?>},
+					{label: "2つ星", value: <?php echo esc_js( $this->arranged_ratings[2] ); ?>},
+					{label: "1つ星", value: <?php echo esc_js( $this->arranged_ratings[1] ); ?>},
 				]
 				HorizontalBarGraph = function (el, series) {
 					this.el = d3.select(el);
@@ -626,8 +686,8 @@ class CommentStarRating {
 	 * @param array $options オプション.
 	 */
 	public function update_options( $options ) {
-		$this->options = array_merge( $this->options, $options );
-		update_option( self::DOMAIN, $this->options );
+		$this->options = $options;
+		update_option( self::DOMAIN, $options );
 	}
 
 	/**
