@@ -11,6 +11,7 @@
 // wp_star_rating() を使うためのインクルード.
 require_once ABSPATH . 'wp-admin/includes/template.php';
 
+
 /**
  * CommentStarRating
  */
@@ -89,7 +90,7 @@ class CommentStarRating {
 	 */
 	public function __construct( $url ) {
 		$this->ratings = array();
-		$this->options = array();
+		$this->options = $this->get_options();
 		$this->url     = $url;
 	}
 
@@ -97,18 +98,22 @@ class CommentStarRating {
 	 * Init all.
 	 */
 	public function init() {
-		$this->options = $this->get_options();
-		if ( is_admin() ) {
-			add_action( 'admin_menu', array( $this, 'admin_menu' ) );
-		} else {
-			add_action( 'wp', array( $this, 'init_user_side' ) );
-		}
+		// WPオブジェクト初期化前に実行される処理.
+		add_action( 'comment_post', array( $this, 'save_rating' ) );
+		add_action( 'comment_text', array( $this, 'comment_display' ) );
+		add_filter( 'comment_form_default_fields', array( $this, 'filter_comment_form' ) );
+		add_filter( 'comment_form_fields', array( $this, 'add_star_field' ) );
+		// WPオブジェクト初期化後に登録しても間に合う処理.
+		add_action( 'wp', array( $this, 'init_wp_after_hooks' ) );
+		// 管理画面.
+		add_action( 'admin_menu', array( $this, 'admin_menu' ) );
 	}
 
 	/**
-	 * ユーザー表示側の初期化処理
+	 * Wpフック後に登録しても間に合う処理.
+	 * WPオブジェクトを使った分岐をまとめて登録したい場合.
 	 */
-	public function init_user_side() {
+	public function init_wp_after_hooks() {
 		global $post;
 		if ( $this->is_enabled_post_type() ) {
 			$this->setup_comment_rating( $post->ID );
@@ -117,10 +122,6 @@ class CommentStarRating {
 			add_action( 'wp_head', array( $this, 'json_ld' ) );
 			add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_styles' ) );
 			add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_scripts' ) );
-			add_filter( 'comment_form_default_fields', array( $this, 'filter_comment_form' ) );
-			add_filter( 'comment_form_fields', array( $this, 'add_star_field' ) );
-			add_action( 'comment_post', array( $this, 'save_rating' ) );
-			add_action( 'comment_text', array( $this, 'comment_display' ) );
 			add_shortcode( 'comment_star_rating_total', array( $this, 'shortcode' ) );
 		}
 	}
@@ -235,8 +236,9 @@ class CommentStarRating {
 	public function get_approved_comment( $post_id ) {
 		$comments = get_comments(
 			array(
-				'status'  => 'approve',
-				'post_id' => $post_id,
+				'status'   => 'approve',
+				'post_id'  => $post_id,
+				'meta_key' => 'csr_rating',
 			)
 		);
 
@@ -408,10 +410,8 @@ class CommentStarRating {
 	public function save_rating( $comment_id ) {
 		// 一般ユーザーのみレーティングを保存する.
 		if ( ! is_user_logged_in() ) {
-			$rating = $this->validate_rating( 3 );
-			echo "comment_id = {$comment_id}";
-			echo "rating = {$rating}";
-			add_comment_meta( $comment_id, self::COMMENT_META_KEY, $rating, false );
+			$rating = $this->validate_rating( 10 );
+			add_comment_meta( $comment_id, 'csr_rating', $rating );
 		}
 
 		return $comment_id;
@@ -421,6 +421,7 @@ class CommentStarRating {
 	 * $_POSTのCOMMENT_META_KEYを1~5の値で検証し、返す.
 	 *
 	 * @param void $rating ユーザー入力値.
+	 *
 	 * @return int レーティング.
 	 */
 	public function validate_rating( $rating ) {
@@ -633,7 +634,7 @@ class CommentStarRating {
 	 * オプションゲッター.
 	 */
 	public function get_options() {
-		return get_option( self::DOMAIN );
+		return get_option( self::DOMAIN, [] );
 	}
 }
 

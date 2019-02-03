@@ -12,6 +12,7 @@ class CommentStarRatingTest extends WP_UnitTestCase {
 
 	private $comment_star_rating;
 	private $post1;
+	private $post2;
 	private $comment1;
 	private $comment2;
 
@@ -39,6 +40,7 @@ class CommentStarRatingTest extends WP_UnitTestCase {
 
 		// 投稿を作成.
 		$this->post1 = $this->factory->post->create();
+		$this->post2 = $this->factory->post->create();
 
 		// コメントを作成.
 		$this->comment1 = $this->factory->comment->create( array( 'comment_post_ID' => $this->post1 ) );
@@ -102,11 +104,20 @@ class CommentStarRatingTest extends WP_UnitTestCase {
 	 * Save rating.
 	 */
 	public function test_save_ratingでコメントメタにレーティングがデフォルト値の3が保存されてるか() {
-		$comment_id = $this->comment_star_rating->save_rating( $this->comment1 );
+		$comment_id = $this->factory->comment->create( array( 'comment_post_ID' => $this->post2 ) );
+
+		$comment_id = $this->comment_star_rating->save_rating( $comment_id );
 		$actual     = get_comment_meta( $comment_id, CommentStarRating::COMMENT_META_KEY, true );
-		$this->assertEquals( 5, $actual );
+		$this->assertEquals( 3, $actual );
 	}
 
+	/**
+	 * Validate rating.
+	 */
+	public function test_バリデーションに10を入力すると3が返る() {
+		$actual = $this->comment_star_rating->validate_rating( 10 );
+		$this->assertEquals( 3, $actual );
+	}
 	/**
 	 * Get approved comment.
 	 */
@@ -159,12 +170,11 @@ class CommentStarRatingTest extends WP_UnitTestCase {
 		$this->assertEquals( 4, $actual );
 	}
 
-
 	/**
 	 * Setup comment rating.
 	 */
 	public function test_初回設定値に期待通りの値が入っているか() {
-		$this->comment_star_rating->setup_comment_rating($this->post1);
+		$this->comment_star_rating->setup_comment_rating( $this->post1 );
 		$expected = [
 			'1' => 0,
 			'2' => 0,
