@@ -123,35 +123,10 @@ class CommentStarRatingTest extends WP_UnitTestCase {
 	}
 
 	/**
-	 * Validate rating.
-	 */
-	public function test_バリデーションに10を入力すると3が返る() {
-		$actual = $this->comment_star_rating->validate_rating( 10 );
-		$this->assertEquals( 3, $actual );
-	}
-	/**
-	 * Get approved comment.
-	 */
-	public function test_承認されたコメントが2つであるか() {
-		// 未承認コメントを追加.
-		$comment_id = $this->factory->comment->create(
-			array(
-				'comment_post_ID'  => $this->post1,
-				'comment_approved' => 0,
-			)
-		);
-		add_comment_meta( $comment_id, CommentStarRating::COMMENT_META_KEY, 1 );
-
-		$approved_comments = $this->comment_star_rating->get_approved_comment( $this->post1 );
-		$actual            = count( $approved_comments );
-		$this->assertEquals( 2, $actual );
-	}
-
-	/**
 	 * Generate ratings from comments.
 	 */
 	public function test_コメント配列がレーティング配列に生成されたか() {
-		$comments = $this->comment_star_rating->get_approved_comment( $this->post1 );
+		$comments = CSR_Post::find_all_approved_comments( $this->post1 );
 		$actual   = $this->comment_star_rating->generate_ratings_from_comments( $comments );
 		$this->assertEquals( [ 5, 3 ], $actual );
 	}
@@ -175,7 +150,7 @@ class CommentStarRatingTest extends WP_UnitTestCase {
 	 * Calculate average rating.
 	 */
 	public function test_post1のコメントの平均値が4か() {
-		$comments = $this->comment_star_rating->get_approved_comment( $this->post1 );
+		$comments = CSR_Post::find_all_approved_comments( $this->post1 );
 		$ratings  = $this->comment_star_rating->generate_ratings_from_comments( $comments );
 		$actual = $this->comment_star_rating->calculate_average_rating( $ratings );
 		$this->assertEquals( 4, $actual );

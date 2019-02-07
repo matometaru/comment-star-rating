@@ -10,6 +10,8 @@
  */
 // wp_star_rating() を使うためのインクルード.
 require_once ABSPATH . 'wp-admin/includes/template.php';
+include_once( plugin_dir_path( __FILE__ ) . 'classes/functions.php' );
+include_once( plugin_dir_path( __FILE__ ) . 'classes/config.php' );
 
 
 /**
@@ -18,71 +20,45 @@ require_once ABSPATH . 'wp-admin/includes/template.php';
 class CommentStarRating {
 	/**
 	 * 全評価配列.
-	 *
 	 * @var array $ratings
 	 */
-	private $ratings;
+	private $ratings = array();
 	/**
 	 * 全評価の数.
-	 *
 	 * @var int $rating_count
 	 */
 	private $rating_count;
 	/**
 	 * 全評価の平均.
-	 *
 	 * @var int $average
 	 */
 	private $average;
 	/**
 	 * 各スコアの評価数配列.
-	 *
 	 * @var array $ratings_arrange 配列
 	 */
 	private $arranged_ratings;
 	/**
 	 * 設定オプション.
-	 *
 	 * @var int $options
 	 */
 	private $options;
 	/**
 	 * 現在ページの投稿ID.
-	 *
 	 * @var int $current_post_id
 	 */
 	private $current_post_id;
 
-	const NAME = 'CommentStarRating';
-	const DOMAIN = 'comment-star-rating';
-	const COMMENT_META_KEY = 'csr_rating';
-
-	public function get_ratings() {
-		return $this->ratings;
-	}
-
 	public function set_ratings( $ratings ) {
 		$this->ratings = $ratings;
-	}
-
-	public function get_rating_count() {
-		return $this->rating_count;
 	}
 
 	public function set_rating_count( $rating_count ) {
 		$this->rating_count = $rating_count;
 	}
 
-	public function get_average() {
-		return $this->average;
-	}
-
 	public function set_average( $average ) {
 		$this->average = $average;
-	}
-
-	public function get_arranged_ratings() {
-		return $this->arranged_ratings;
 	}
 
 	public function set_arranged_ratings( $arranged_ratings ) {
@@ -95,7 +71,6 @@ class CommentStarRating {
 	 * @param string $url プラグインURL.
 	 */
 	public function __construct( $url ) {
-		$this->ratings = array();
 		$this->options = $this->get_options();
 		$this->url     = $url;
 	}
@@ -104,6 +79,8 @@ class CommentStarRating {
 	 * Init all.
 	 */
 	public function init() {
+		// 全ファイル読み込み
+		add_action( 'plugins_loaded', array( $this, '_load_initialize_files' ), 9 );
 		// WPオブジェクト初期化前に実行される処理.
 		add_action( 'comment_post', array( $this, 'save_rating' ) );
 		add_action( 'comment_text', array( $this, 'comment_display' ) );
@@ -136,6 +113,25 @@ class CommentStarRating {
 	}
 
 	/**
+	 * Load classes
+	 * @return void
+	 */
+	public function _load_initialize_files() {
+		$plugin_dir_path = plugin_dir_path( __FILE__ );
+		$includes        = array(
+			'/classes/abstract',
+			'/classes/controllers',
+			'/classes/models',
+			'/classes/services',
+		);
+		foreach ( $includes as $include ) {
+			foreach ( glob( $plugin_dir_path . $include . '/*.php' ) as $file ) {
+				require_once( $file );
+			}
+		}
+	}
+
+	/**
 	 * Shortcode.
 	 */
 	public function shortcode() {
@@ -149,7 +145,7 @@ class CommentStarRating {
 		);
 		if ( $this->rating_count > 0 ) {
 			$output .= '<p class="star-counter-tit">';
-			$output .= esc_html__( '5つ星のうち', self::DOMAIN );
+			$output .= esc_html__( '5つ星のうち', CSR_Config::DOMAIN );
 			$output .= number_format_i18n( $this->average, 1 );
 			$output .= '</p>';
 			$output .= '<div id="star-counter"></div>';
@@ -214,7 +210,7 @@ class CommentStarRating {
 	 * @param int $post_id 投稿ID.
 	 */
 	public function setup_comment_rating( $post_id ) {
-		$comments = $this->get_approved_comment( $post_id );
+		$comments = CSR_Post::find_all_approved_comments( $post_id );
 		$ratings  = $this->generate_ratings_from_comments( $comments );
 		$this->set_ratings( $ratings );
 
@@ -241,8 +237,8 @@ class CommentStarRating {
 		if ( $count <= 0 ) {
 			return;
 		}
-		$total        = array_sum( $ratings );
-		$average_rating = number_format_i18n($total / $count, 1);
+		$total          = array_sum( $ratings );
+		$average_rating = number_format_i18n( $total / $count, 1 );
 
 		return $average_rating;
 	}
@@ -272,37 +268,18 @@ class CommentStarRating {
 	 *
 	 * @param int $comments 投稿ID.
 	 *
-	 * @return array $comments
+	 * @return array $ratings
 	 */
 	public function generate_ratings_from_comments( $comments ) {
 		$ratings = [];
 		foreach ( $comments as $comment ) {
-			$star = get_comment_meta( $comment->comment_ID, self::COMMENT_META_KEY, true );
+			$star = get_comment_meta( $comment->comment_ID, CSR_Config::COMMENT_META_KEY, true );
 			if ( ! empty( $star ) ) {
 				array_push( $ratings, $star );
 			}
 		}
 
 		return $ratings;
-	}
-
-	/**
-	 * Get approved comment.
-	 *
-	 * @param int $post_id 投稿ID.
-	 *
-	 * @return array $comments
-	 */
-	public function get_approved_comment( $post_id ) {
-		$comments = get_comments(
-			array(
-				'status'   => 'approve',
-				'post_id'  => $post_id,
-				'meta_key' => 'csr_rating',
-			)
-		);
-
-		return $comments;
 	}
 
 	/**
@@ -470,54 +447,33 @@ class CommentStarRating {
 	public function save_rating( $comment_id ) {
 		// 一般ユーザーのみレーティングを保存する.
 		if ( ! is_user_logged_in() ) {
-			$rating = $this->validate_rating( $_POST[ self::COMMENT_META_KEY ] );
-			add_comment_meta( $comment_id, 'csr_rating', $rating );
+			$rating = CSR_Functions::validate_rating( $_POST[ CSR_Config::COMMENT_META_KEY ] );
+			CSR_Config::find( $comment_id )->set_rating( $rating )->save();
 		}
 
 		return $comment_id;
 	}
 
 	/**
-	 * $_POSTのCOMMENT_META_KEYを1~5の値で検証し、返す.
-	 *
-	 * @param void $rating ユーザー入力値.
-	 *
-	 * @return int レーティング.
-	 */
-	public function validate_rating( $rating ) {
-		$options = array(
-			'options' => array(
-				'default'   => 3,
-				'min_range' => 1,
-				'max_range' => 5,
-			),
-		);
-
-		return filter_var( $rating, FILTER_VALIDATE_INT, $options );
-	}
-
-	/**
 	 * コメントの最後にレーティングを表示.
 	 *
-	 * @param array $comment コメント.
+	 * @param array $wp_comment コメント.
 	 *
-	 * @return string $comment コメント.
+	 * @return string $wp_comment コメント.
 	 */
-	public function comment_display( $comment ) {
-		// スターがなければ通常コメントを返す.
-		$rating = get_comment_meta( get_comment_ID(), self::COMMENT_META_KEY, true );
-		if ( empty( $rating ) ) {
-			return $comment;
+	public function comment_display( $wp_comment ) {
+		$comment = CSR_Comment::find( get_comment_ID() );
+		$rating  = $comment->get( 'rating' );
+		if ( ! $rating ) {
+			return $wp_comment;
 		}
-		$rating = $this->validate_rating( $rating );
 
 		// コメントしたユーザーがログインユーザーの場合も通常コメントを返す.
-		$general_user = $this->is_general_user( get_comment_ID() );
-		if ( ! $general_user ) {
-			return $comment;
+		if ( ! $comment->is_general_user() ) {
+			return $wp_comment;
 		}
 
-		// それ以外はレーティングを付与.
+		$rating = CSR_Functions::validate_rating( $rating );
 		$output = wp_star_rating(
 			array(
 				'rating' => $rating,
@@ -527,23 +483,7 @@ class CommentStarRating {
 			)
 		);
 
-		return $comment . $output;
-	}
-
-	/**
-	 * 一般ユーザーのコメントか？
-	 *
-	 * @param int $comment_id コメントID.
-	 *
-	 * @return boolean 一般ユーザーのコメントか.
-	 */
-	public function is_general_user( $comment_id ) {
-		// コメントしたユーザーの取得.
-		$comment_object = get_comment( $comment_id );
-		$comment_user   = $comment_object->user_id;
-
-		// 一般ユーザーはIDが0.
-		return '0' === $comment_user;
+		return $wp_comment . $output;
 	}
 
 	/**
@@ -563,7 +503,6 @@ class CommentStarRating {
 
 	/**
 	 * コメントフォームにURLの表示が無効か？
-	 *
 	 * @return boolean
 	 */
 	public function is_disabled_form_url() {
@@ -572,7 +511,6 @@ class CommentStarRating {
 
 	/**
 	 * コメントフォームにメールアドレスの表示が無効か？
-	 *
 	 * @return boolean
 	 */
 	public function is_disabled_form_email() {
@@ -584,10 +522,10 @@ class CommentStarRating {
 	 */
 	public function admin_menu() {
 		add_options_page(
-			self::NAME, // page_title.
-			self::NAME, // menu_title.
+			CSR_Config::NAME, // page_title.
+			CSR_Config::NAME, // menu_title.
 			'manage_options', // capabiliity.
-			self::DOMAIN, // menu_slug.
+			CSR_Config::DOMAIN, // menu_slug.
 			array( $this, 'admin_save_options' ) // callback.
 		);
 	}
@@ -599,8 +537,8 @@ class CommentStarRating {
 		$post_types = wp_list_filter( get_post_types( array( 'public' => true ) ), array( 'attachment' ), 'NOT' );
 		?>
 		<div class="wrap">
-			<h2><?php echo esc_attr( self::NAME ); ?> &raquo; <?php _e( 'Settings' ); ?></h2>
-			<form id="<?php echo esc_attr( self::DOMAIN ); ?>" method="post" action="">
+			<h2><?php echo esc_attr( CSR_Config::NAME ); ?> &raquo; <?php _e( 'Settings' ); ?></h2>
+			<form id="<?php echo esc_attr( CSR_Config::DOMAIN ); ?>" method="post" action="">
 				<?php wp_nonce_field( 'csr-nonce-key', 'csr-key' ); ?>
 				<h3><?php _e( '有効にする投稿タイプを選択してください' ); ?></h3>
 				<?php
@@ -609,7 +547,7 @@ class CommentStarRating {
 					<p>
 						<strong><?php echo esc_attr( $post_type ); ?>ページ上で有効にします</strong>
 						<input type="checkbox"
-							   name="<?php echo esc_attr( self::DOMAIN ); ?>[<?php echo esc_attr( $post_type ); ?>]"
+							   name="<?php echo esc_attr( CSR_Config::DOMAIN ); ?>[<?php echo esc_attr( $post_type ); ?>]"
 							   value="1"
 							<?php
 							if ( $this->is_enabled_post_type( $post_type ) ) {
@@ -624,7 +562,7 @@ class CommentStarRating {
 				<h3>コメントの入力から外したい要素を選択</h3>
 				<p>
 					<strong>URLを外す</strong>
-					<input type="checkbox" name="<?php echo esc_attr( self::DOMAIN ); ?>[url]" value="1"
+					<input type="checkbox" name="<?php echo esc_attr( CSR_Config::DOMAIN ); ?>[url]" value="1"
 						<?php
 						if ( $this->is_disabled_form_url() ) {
 							echo 'checked';
@@ -634,7 +572,7 @@ class CommentStarRating {
 				</p>
 				<p>
 					<strong>メールアドレスを外す</strong>
-					<input type="checkbox" name="<?php echo esc_attr( self::DOMAIN ); ?>[email]" value="1"
+					<input type="checkbox" name="<?php echo esc_attr( CSR_Config::DOMAIN ); ?>[email]" value="1"
 						<?php
 						if ( $this->is_disabled_form_email() ) {
 							echo 'checked';
@@ -663,8 +601,8 @@ class CommentStarRating {
 		if ( isset( $_POST['save'] ) ) {
 			if ( check_admin_referer( 'csr-nonce-key', 'csr-key' ) ) {
 				$options = array();
-				if ( ! empty( $_POST[ self::DOMAIN ] ) ) {
-					foreach ( $_POST[ self::DOMAIN ] as $key => $value ) {
+				if ( ! empty( $_POST[ CSR_Config::DOMAIN ] ) ) {
+					foreach ( $_POST[ CSR_Config::DOMAIN ] as $key => $value ) {
 						if ( in_array( $key, $key_array ) ) {
 							$key = $key;
 						} else {
@@ -687,14 +625,14 @@ class CommentStarRating {
 	 */
 	public function update_options( $options ) {
 		$this->options = $options;
-		update_option( self::DOMAIN, $options );
+		update_option( CSR_Config::DOMAIN, $options );
 	}
 
 	/**
 	 * オプションゲッター.
 	 */
 	public function get_options() {
-		return get_option( self::DOMAIN, [] );
+		return get_option( CSR_Config::DOMAIN, [] );
 	}
 }
 
