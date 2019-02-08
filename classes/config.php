@@ -7,7 +7,7 @@ class CSR_Config {
 	/**
 	 * Plugin view name
 	 */
-	const NAME = 'comment-star-rating';
+	const NAME = 'Comment Star Rating';
 	/**
 	 * Domain
 	 */
