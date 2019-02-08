@@ -83,8 +83,6 @@ class CommentStarRating {
 	public function init() {
 		// WPオブジェクト初期化後に登録しても間に合う処理.
 		add_action( 'wp', array( $this, 'init_wp_after_hooks' ) );
-		// 管理画面.
-		add_action( 'admin_menu', array( $this, 'admin_menu' ) );
 	}
 
 	/**
@@ -125,6 +123,7 @@ class CommentStarRating {
 			}
 		}
 		new CSR_Comment_Controller();
+		new CSR_Admin_Controller( CSR_Option::find() );
 	}
 
 	/**
@@ -363,108 +362,6 @@ class CommentStarRating {
 	public function wp_enqueue_scripts() {
 		wp_enqueue_script( 'd3', $this->url . '/js/d3.min.js', array( 'jquery' ) );
 		wp_enqueue_script( 'raty', $this->url . '/js/jquery.raty.js', array( 'jquery' ) );
-	}
-
-	/**
-	 * 管理画面を追加.
-	 */
-	public function admin_menu() {
-		add_options_page(
-			CSR_Config::NAME, // page_title.
-			CSR_Config::NAME, // menu_title.
-			'manage_options', // capabiliity.
-			CSR_Config::DOMAIN, // menu_slug.
-			array( $this, 'admin_save_options' ) // callback.
-		);
-	}
-
-	/**
-	 * 管理画面:オプション保存レイアウト
-	 */
-	public function admin_setting_form() {
-		$post_types = wp_list_filter( get_post_types( array( 'public' => true ) ), array( 'attachment' ), 'NOT' );
-		?>
-		<div class="wrap">
-			<h2><?php echo esc_attr( CSR_Config::NAME ); ?> &raquo; <?php _e( 'Settings' ); ?></h2>
-			<form id="<?php echo esc_attr( CSR_Config::DOMAIN ); ?>" method="post" action="">
-				<?php wp_nonce_field( 'csr-nonce-key', 'csr-key' ); ?>
-				<h3><?php _e( '有効にする投稿タイプを選択してください' ); ?></h3>
-				<?php
-				foreach ( $post_types as $post_type ) {
-					?>
-					<p>
-						<strong><?php echo esc_attr( $post_type ); ?>ページ上で有効にします</strong>
-						<input type="checkbox"
-							   name="<?php echo esc_attr( CSR_Config::DOMAIN ); ?>[<?php echo esc_attr( $post_type ); ?>]"
-							   value="1"
-							<?php
-							if ( CSR_Option::find()->is_enabled_post_type( $post_type ) ) {
-								echo 'checked';
-							}
-							?>
-						/>
-					</p>
-					<?php
-				}
-				?>
-				<h3>コメントの入力から外したい要素を選択</h3>
-				<p>
-					<strong>URLを外す</strong>
-					<input type="checkbox" name="<?php echo esc_attr( CSR_Config::DOMAIN ); ?>[url]" value="1"
-						<?php
-						if ( $this->is_disabled_form_url() ) {
-							echo 'checked';
-						}
-						?>
-					/>
-				</p>
-				<p>
-					<strong>メールアドレスを外す</strong>
-					<input type="checkbox" name="<?php echo esc_attr( CSR_Config::DOMAIN ); ?>[email]" value="1"
-						<?php
-						if ( $this->is_disabled_form_email() ) {
-							echo 'checked';
-						}
-						?>
-					/>
-				</p>
-				<p class="submit">
-					<input class="button-primary" type="submit" name='save' value='<?php _e( 'Save Changes' ); ?>'/>
-				</p>
-			</form>
-		</div>
-		<?php
-	}
-
-	/**
-	 * 保存
-	 */
-	public function admin_save_options() {
-		$post_types = wp_list_filter( get_post_types( array( 'public' => true ) ), array( 'attachment' ), 'NOT' );
-		$key_array  = array();
-		foreach ( $post_types as $post_type ) {
-			array_push( $key_array, $post_type );
-		}
-		array_push( $key_array, 'url', 'email' );
-		if ( isset( $_POST['save'] ) ) {
-			if ( check_admin_referer( 'csr-nonce-key', 'csr-key' ) ) {
-				$options = array();
-				if ( ! empty( $_POST[ CSR_Config::DOMAIN ] ) ) {
-					foreach ( $_POST[ CSR_Config::DOMAIN ] as $key => $value ) {
-						if ( in_array( $key, $key_array ) ) {
-							$key = $key;
-						} else {
-							break;
-						}
-						$value   = '1';
-						$options += array( $key => $value );
-					}
-				}
-				// $this->update_options( $options );
-				CSR_Option::find()->sets( $options )->save();
-			}
-		}
-		$this->admin_setting_form();
 	}
 }
 
