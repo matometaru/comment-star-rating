@@ -1,4 +1,5 @@
 <?php
+
 class CSR_Functions {
 
 	/**
@@ -18,6 +19,24 @@ class CSR_Functions {
 		);
 
 		return filter_var( $rating, FILTER_VALIDATE_INT, $options );
+	}
+
+	/**
+	 * 評価平均値を取得する.
+	 *
+	 * @param array $all_ratings 評価配列.
+	 *
+	 * @return int 平均値（小数点第一位）
+	 */
+	public static function calculate_average_rating( $all_ratings ) {
+		$count = count( $all_ratings );
+		if ( $count <= 0 ) {
+			return;
+		}
+		$total          = array_sum( $all_ratings );
+		$average_rating = number_format_i18n( $total / $count, 1 );
+
+		return number_format_i18n( $average_rating, 1 );
 	}
 
 	/**

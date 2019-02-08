@@ -81,11 +81,6 @@ class CommentStarRating {
 	 * Init all.
 	 */
 	public function init() {
-		// WPオブジェクト初期化前に実行される処理.
-		add_action( 'comment_post', array( $this, 'save_rating' ) );
-		add_action( 'comment_text', array( $this, 'comment_display' ) );
-		add_filter( 'comment_form_default_fields', array( $this, 'filter_comment_form' ) );
-		add_filter( 'comment_form_fields', array( $this, 'add_star_field' ) );
 		// WPオブジェクト初期化後に登録しても間に合う処理.
 		add_action( 'wp', array( $this, 'init_wp_after_hooks' ) );
 		// 管理画面.
@@ -129,6 +124,7 @@ class CommentStarRating {
 				require_once( $file );
 			}
 		}
+		new CSR_Comment_Controller();
 	}
 
 	/**
@@ -146,7 +142,7 @@ class CommentStarRating {
 		if ( $this->rating_count > 0 ) {
 			$output .= '<p class="star-counter-tit">';
 			$output .= esc_html__( '5つ星のうち', CSR_Config::DOMAIN );
-			$output .= number_format_i18n( $this->average, 1 );
+			$output .= $this->average;
 			$output .= '</p>';
 			$output .= '<div id="star-counter"></div>';
 		}
@@ -219,30 +215,12 @@ class CommentStarRating {
 		$rating_count = count( $ratings );
 		$this->set_rating_count( $rating_count );
 
-		$average = $this->calculate_average_rating( $ratings );
+		$average = CSR_Functions::calculate_average_rating( $ratings );
 		$this->set_average( $average );
 
 		$arranged_ratings = CSR_Functions::arrange_ratings( $ratings );
 		$this->set_arranged_ratings( $arranged_ratings );
 		update_post_meta( $this->current_post_id, 'csr_average_rating', $this->average );
-	}
-
-	/**
-	 * 評価平均値を取得する.
-	 *
-	 * @param array $ratings 評価配列.
-	 *
-	 * @return int 平均値
-	 */
-	public function calculate_average_rating( $ratings ) {
-		$count = count( $ratings );
-		if ( $count <= 0 ) {
-			return;
-		}
-		$total          = array_sum( $ratings );
-		$average_rating = number_format_i18n( $total / $count, 1 );
-
-		return $average_rating;
 	}
 
 	/**
@@ -385,88 +363,6 @@ class CommentStarRating {
 	public function wp_enqueue_scripts() {
 		wp_enqueue_script( 'd3', $this->url . '/js/d3.min.js', array( 'jquery' ) );
 		wp_enqueue_script( 'raty', $this->url . '/js/jquery.raty.js', array( 'jquery' ) );
-	}
-
-	/**
-	 * コメントフォーム要素の削除.
-	 *
-	 * @param array $fields wp comment fields.
-	 *
-	 * @return array $fields wp comment fields.
-	 */
-	public function filter_comment_form( $fields ) {
-		$options = CSR_Option::find();
-		if ( $options->is_disabled_form_url() ) {
-			$fields['url'] = '';
-		}
-		if ( $options->is_disabled_form_email() ) {
-			$fields['email'] = '';
-		}
-
-		return $fields;
-	}
-
-	/**
-	 * コメントに星入力フォームの追加.
-	 *
-	 * @param array $fields wp comment fields.
-	 *
-	 * @return array $fields wp comment fields.
-	 */
-	public function add_star_field( $fields ) {
-		$fields['rating'] = '<div id="input-type-star"></div>';
-		$fields['rating'] .= '<input type="hidden" name="csr_rating" value="" />';
-
-		return $fields;
-	}
-
-	/**
-	 * コメントの保存時: レーティングを保存する
-	 *
-	 * @param int $comment_id コメントID.
-	 *
-	 * @return int $comment_id コメントID.
-	 */
-	public function save_rating( $comment_id ) {
-		// 一般ユーザーのみレーティングを保存する.
-		if ( ! is_user_logged_in() ) {
-			$rating = CSR_Functions::validate_rating( $_POST[ CSR_Config::COMMENT_META_KEY ] );
-			CSR_Comment::find( $comment_id )->set_rating( $rating )->save();
-		}
-
-		return $comment_id;
-	}
-
-	/**
-	 * コメントの最後にレーティングを表示.
-	 *
-	 * @param array $wp_comment コメント.
-	 *
-	 * @return string $wp_comment コメント.
-	 */
-	public function comment_display( $wp_comment ) {
-		$comment = CSR_Comment::find( get_comment_ID() );
-		$rating  = $comment->get( 'rating' );
-		if ( ! $rating ) {
-			return $wp_comment;
-		}
-
-		// コメントしたユーザーがログインユーザーの場合も通常コメントを返す.
-		if ( ! $comment->is_general_user() ) {
-			return $wp_comment;
-		}
-
-		$rating = CSR_Functions::validate_rating( $rating );
-		$output = wp_star_rating(
-			array(
-				'rating' => $rating,
-				'type'   => 'rating',
-				'number' => 0,
-				'echo'   => false,
-			)
-		);
-
-		return $wp_comment . $output;
 	}
 
 	/**
