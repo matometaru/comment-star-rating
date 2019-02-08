@@ -41,6 +41,14 @@ class CSR_FunctionsTest extends WP_UnitTestCase {
 	/**
 	 * Arrange ratings.
 	 */
+	public function test_全評価配列から平均() {
+		$actual = CSR_Functions::calculate_average_rating( [ 1, 1, 1, 3, 5 ] );
+		$this->assertEquals( 2.2, $actual );
+	}
+
+	/**
+	 * Arrange ratings.
+	 */
 	public function test_全評価配列が1_2_3_4_5をkeyに、評価数がvalueの配列() {
 		$actual = CSR_Functions::arrange_ratings( [ 1, 1, 3, 5 ] );
 		$expected = [

@@ -109,7 +109,7 @@ class CommentStarRatingTest extends WP_UnitTestCase {
 	public function test_post1のコメントの平均値が4か() {
 		$comments = CSR_Post::find_all_approved_comments( $this->post1 );
 		$ratings  = $this->comment_star_rating->generate_ratings_from_comments( $comments );
-		$actual = $this->comment_star_rating->calculate_average_rating( $ratings );
+		$actual = CSR_Functions::calculate_average_rating( $ratings );
 		$this->assertEquals( 4, $actual );
 	}
 

@@ -22,10 +22,10 @@ class CSR_CommentTest extends WP_UnitTestCase {
 
 		// コメントを作成.
 		$this->comment1 = $this->factory->comment->create( array( 'comment_post_ID' => $this->post1 ) );
-		add_comment_meta( $this->comment1, CommentStarRating::COMMENT_META_KEY, 5 );
+		add_comment_meta( $this->comment1, CSR_Config::COMMENT_META_KEY, 5 );
 
 		$this->comment2 = $this->factory->comment->create( array( 'comment_post_ID' => $this->post1 ) );
-		add_comment_meta( $this->comment2, CommentStarRating::COMMENT_META_KEY, 3 );
+		add_comment_meta( $this->comment2, CSR_Config::COMMENT_META_KEY, 3 );
 	}
 
 	/**
