@@ -71,16 +71,16 @@ class CommentStarRating {
 	 * @param string $url プラグインURL.
 	 */
 	public function __construct( $url ) {
-		$this->options = $this->get_options();
 		$this->url     = $url;
+		// 全ファイル読み込み
+		add_action( 'plugins_loaded', array( $this, '_load_initialize_files' ), 9 );
+		add_action( 'plugins_loaded', array( $this, 'init' ), 11 );
 	}
 
 	/**
 	 * Init all.
 	 */
 	public function init() {
-		// 全ファイル読み込み
-		add_action( 'plugins_loaded', array( $this, '_load_initialize_files' ), 9 );
 		// WPオブジェクト初期化前に実行される処理.
 		add_action( 'comment_post', array( $this, 'save_rating' ) );
 		add_action( 'comment_text', array( $this, 'comment_display' ) );
@@ -99,7 +99,7 @@ class CommentStarRating {
 	public function init_wp_after_hooks() {
 		global $post;
 		$this->current_post_id = $post->ID;
-		if ( $this->is_enabled_post_type() ) {
+		if ( CSR_Option::find()->is_enabled_post_type() ) {
 			$this->setup_comment_rating( $post->ID );
 			add_action( 'wp_head', array( $this, 'd3_init' ) );
 			add_action( 'wp_head', array( $this, 'raty_init' ) );
@@ -210,6 +210,8 @@ class CommentStarRating {
 	 * @param int $post_id 投稿ID.
 	 */
 	public function setup_comment_rating( $post_id ) {
+		$this->options = CSR_Option::find()->get( 'options' );
+
 		$comments = CSR_Post::find_all_approved_comments( $post_id );
 		$ratings  = $this->generate_ratings_from_comments( $comments );
 		$this->set_ratings( $ratings );
@@ -246,12 +248,12 @@ class CommentStarRating {
 	/**
 	 * レーティングを整理する.
 	 *
-	 * @param array $ratings 全評価配列.
+	 * @param array $all_ratings 全評価配列.
 	 *
 	 * @return array $arranged_ratings 1,2,3,4,5をkeyに、評価数がvalueの配列.
 	 */
-	public function arrange_ratings( $ratings ) {
-		$arranged_ratings = array_count_values( $ratings );
+	public function arrange_ratings( $all_ratings ) {
+		$arranged_ratings = array_count_values( $all_ratings );
 		// 未定義、空なら0を入れる.
 		for ( $i = 1; $i <= 5; $i ++ ) {
 			if ( ! isset( $arranged_ratings[ $i ] ) ) {
@@ -413,10 +415,11 @@ class CommentStarRating {
 	 * @return array $fields wp comment fields.
 	 */
 	public function filter_comment_form( $fields ) {
-		if ( $this->is_disabled_form_url() ) {
+		$options = CSR_Option::find();
+		if ( $options->is_disabled_form_url() ) {
 			$fields['url'] = '';
 		}
-		if ( $this->is_disabled_form_email() ) {
+		if ( $options->is_disabled_form_email() ) {
 			$fields['email'] = '';
 		}
 
@@ -448,7 +451,7 @@ class CommentStarRating {
 		// 一般ユーザーのみレーティングを保存する.
 		if ( ! is_user_logged_in() ) {
 			$rating = CSR_Functions::validate_rating( $_POST[ CSR_Config::COMMENT_META_KEY ] );
-			CSR_Config::find( $comment_id )->set_rating( $rating )->save();
+			CSR_Comment::find( $comment_id )->set_rating( $rating )->save();
 		}
 
 		return $comment_id;
@@ -487,37 +490,6 @@ class CommentStarRating {
 	}
 
 	/**
-	 * 現在の投稿タイプで有効か？
-	 *
-	 * @param string $post_type 投稿タイプ.
-	 *
-	 * @return boolean
-	 */
-	public function is_enabled_post_type( $post_type = null ) {
-		if ( null === $post_type ) {
-			$post_type = get_post_type();
-		}
-
-		return isset( $this->options[ $post_type ] ) && '1' === $this->options[ $post_type ];
-	}
-
-	/**
-	 * コメントフォームにURLの表示が無効か？
-	 * @return boolean
-	 */
-	public function is_disabled_form_url() {
-		return isset( $this->options['url'] ) && '1' === $this->options['url'];
-	}
-
-	/**
-	 * コメントフォームにメールアドレスの表示が無効か？
-	 * @return boolean
-	 */
-	public function is_disabled_form_email() {
-		return isset( $this->options['email'] ) && '1' === $this->options['email'];
-	}
-
-	/**
 	 * 管理画面を追加.
 	 */
 	public function admin_menu() {
@@ -550,7 +522,7 @@ class CommentStarRating {
 							   name="<?php echo esc_attr( CSR_Config::DOMAIN ); ?>[<?php echo esc_attr( $post_type ); ?>]"
 							   value="1"
 							<?php
-							if ( $this->is_enabled_post_type( $post_type ) ) {
+							if ( CSR_Option::find()->is_enabled_post_type( $post_type ) ) {
 								echo 'checked';
 							}
 							?>
@@ -612,27 +584,11 @@ class CommentStarRating {
 						$options += array( $key => $value );
 					}
 				}
-				$this->update_options( $options );
+				// $this->update_options( $options );
+				CSR_Option::find()->sets( $options )->save();
 			}
 		}
 		$this->admin_setting_form();
-	}
-
-	/**
-	 * オプションセット、保存.
-	 *
-	 * @param array $options オプション.
-	 */
-	public function update_options( $options ) {
-		$this->options = $options;
-		update_option( CSR_Config::DOMAIN, $options );
-	}
-
-	/**
-	 * オプションゲッター.
-	 */
-	public function get_options() {
-		return get_option( CSR_Config::DOMAIN, [] );
 	}
 }
 
