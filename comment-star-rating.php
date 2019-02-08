@@ -222,7 +222,7 @@ class CommentStarRating {
 		$average = $this->calculate_average_rating( $ratings );
 		$this->set_average( $average );
 
-		$arranged_ratings = $this->arrange_ratings( $ratings );
+		$arranged_ratings = CSR_Functions::arrange_ratings( $ratings );
 		$this->set_arranged_ratings( $arranged_ratings );
 		update_post_meta( $this->current_post_id, 'csr_average_rating', $this->average );
 	}
@@ -243,26 +243,6 @@ class CommentStarRating {
 		$average_rating = number_format_i18n( $total / $count, 1 );
 
 		return $average_rating;
-	}
-
-	/**
-	 * レーティングを整理する.
-	 *
-	 * @param array $all_ratings 全評価配列.
-	 *
-	 * @return array $arranged_ratings 1,2,3,4,5をkeyに、評価数がvalueの配列.
-	 */
-	public function arrange_ratings( $all_ratings ) {
-		$arranged_ratings = array_count_values( $all_ratings );
-		// 未定義、空なら0を入れる.
-		for ( $i = 1; $i <= 5; $i ++ ) {
-			if ( ! isset( $arranged_ratings[ $i ] ) ) {
-				$arranged_ratings[ $i ] = 0;
-			}
-		}
-		ksort( $arranged_ratings );
-
-		return $arranged_ratings;
 	}
 
 	/**

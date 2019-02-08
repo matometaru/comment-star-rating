@@ -19,4 +19,24 @@ class CSR_Functions {
 
 		return filter_var( $rating, FILTER_VALIDATE_INT, $options );
 	}
+
+	/**
+	 * レーティングを整理する.
+	 *
+	 * @param array $all_ratings 全評価配列.
+	 *
+	 * @return array $arranged_ratings 1,2,3,4,5をkeyに、評価数がvalueの配列.
+	 */
+	public static function arrange_ratings( $all_ratings ) {
+		$arranged_ratings = array_count_values( $all_ratings );
+		// 未定義、空なら0を入れる.
+		for ( $i = 1; $i <= 5; $i ++ ) {
+			if ( ! isset( $arranged_ratings[ $i ] ) ) {
+				$arranged_ratings[ $i ] = 0;
+			}
+		}
+		ksort( $arranged_ratings );
+
+		return $arranged_ratings;
+	}
 }

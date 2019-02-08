@@ -37,4 +37,19 @@ class CSR_FunctionsTest extends WP_UnitTestCase {
 		$actual = CSR_Functions::validate_rating( 10 );
 		$this->assertEquals( 3, $actual );
 	}
+
+	/**
+	 * Arrange ratings.
+	 */
+	public function test_全評価配列が1_2_3_4_5をkeyに、評価数がvalueの配列() {
+		$actual = CSR_Functions::arrange_ratings( [ 1, 1, 3, 5 ] );
+		$expected = [
+			'1' => 2,
+			'2' => 0,
+			'3' => 1,
+			'4' => 0,
+			'5' => 1,
+		];
+		$this->assertEquals( $expected, $actual );
+	}
 }
