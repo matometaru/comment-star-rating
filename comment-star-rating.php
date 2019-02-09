@@ -36,11 +36,6 @@ class CommentStarRating {
 	 */
 	private $arranged_ratings;
 	/**
-	 * 設定オプション.
-	 * @var int $options
-	 */
-	private $options;
-	/**
 	 * 現在ページの投稿ID.
 	 * @var int $current_post_id
 	 */
@@ -116,7 +111,7 @@ class CommentStarRating {
 		);
 		foreach ( $includes as $include ) {
 			foreach ( glob( $plugin_dir_path . $include . '/*.php' ) as $file ) {
-				require_once( $file );
+				require_once $file;
 			}
 		}
 		new CSR_Comment_Controller();
@@ -203,7 +198,7 @@ class CommentStarRating {
 	 * @param int $post_id 投稿ID.
 	 */
 	public function setup_comment_rating( $post_id ) {
-		$this->options = CSR_Option::find()->get( 'options' );
+		CSR_Option::find();
 
 		$comments = CSR_Post::find_all_approved_comments( $post_id );
 		$ratings  = $this->generate_ratings_from_comments( $comments );
