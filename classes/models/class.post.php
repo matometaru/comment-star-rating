@@ -6,13 +6,13 @@ class CSR_Post extends CSR_Model {
 	 * 投稿ID
 	 * @var int $id
 	 */
-	protected $id = 0;
+	protected $id;
 
 	/**
 	 * 整列済みの評価配列
 	 * @var array $arranged_ratings
 	 */
-	protected $arranged_ratings = [
+	protected $ratings = [
 		'1' => 0,
 		'2' => 0,
 		'3' => 0,
@@ -24,48 +24,81 @@ class CSR_Post extends CSR_Model {
 	 * 評価数
 	 * @var int $rating_count
 	 */
-	protected $rating_count = 0;
+	protected $rating_count;
 
 	/**
 	 * 全評価の平均（小数点第一位まで）
 	 * @var float $rating_average
 	 */
-	protected $rating_average = 0;
+	protected $rating_average;
 
 	/**
-	 * @param int $post_id 投稿ID.
+	 * @param array $properties プロパティ配列.
 	 */
-	public function __construct( $post_id ) {
-		$this->id = $post_id;
+	public function __construct( $properties ) {
+		$defaults   = array(
+			'id'      => 0,
+			'rating'  => 0,
+			'rating_average'  => $this->ratings,
+			'rating_count' => 0,
+		);
+		$properties = array_merge( $defaults, $properties );
 
-		// commentの取得.
 		$comments = self::find_all_approved_comments( $this->id );
-		// 評価コメントがなければ何もしない.
 		if ( empty( $comments ) ) {
-			return;
+			return null;
 		}
-		$this->find_and_set_meta();
+
+		$this->id             = $properties['id'];
+		$this->ratings        = $properties['rating'];
+		$this->rating_average = $properties['rating_average'];
+		$this->rating_count   = $properties['rating_count'];
 	}
 
 	/**
-	 * Set a attribute
+	 * Return all forms
 	 *
-	 * @param string $key
-	 * @param mixed $value
+	 * @param int $post_id 投稿ID.
 	 *
-	 * @return void
+	 * @return CSR_Post
 	 */
-	public function set( $key, $value ) {
-		if ( isset( $this->$key ) ) {
-			$this->$key = $value;
-		}
+	public static function find( $post_id ) {
+		$ratings        = get_post_meta( $post_id, CSR_Config::POST_META_RATINGS_KEY, true );
+		$rating_average = get_post_meta( $post_id, CSR_Config::POST_META_AVERAGE_KEY, true );
+		$rating_count   = get_post_meta( $post_id, CSR_Config::POST_META_COUNT_KEY, true );
+		// $arranged_ratings = json_encode( $ratings );
+
+		$properties['id']             = $post_id;
+		$properties['ratings']        = $ratings;
+		$properties['rating_average'] = $rating_average;
+		$properties['rating_count']   = $rating_count;
+
+		return new CSR_Post( $properties );
+	}
+
+	public function set_ratings( $ratings ) {
+		$this->ratings = $ratings;
+
+		return $this;
+	}
+
+	public function set_rating_average( $rating_average ) {
+		$this->rating_average = $rating_average;
+
+		return $this;
+	}
+
+	public function set_rating_count( $rating_count ) {
+		$this->rating_count = $rating_count;
+
+		return $this;
 	}
 
 	/**
 	 * 全プロパティを保存
 	 */
 	public function save() {
-		$ratings = json_encode( $this->arranged_ratings );
+		$ratings = json_encode( $this->ratings );
 		update_post_meta( $this->id, CSR_Config::POST_META_RATINGS_KEY, $ratings );
 		update_post_meta( $this->id, CSR_Config::POST_META_AVERAGE_KEY, $this->rating_average );
 		update_post_meta( $this->id, CSR_Config::POST_META_COUNT_KEY, $this->rating_count );
@@ -86,16 +119,6 @@ class CSR_Post extends CSR_Model {
 				'meta_key' => CSR_Config::COMMENT_META_KEY,
 			)
 		);
-	}
-
-	/**
-	 * 投稿メタ要素をDBから取得
-	 */
-	private function find_and_set_meta() {
-		$ratings                = get_post_meta( $this->id, CSR_Config::POST_META_RATINGS_KEY, true );
-		$this->rating_average   = get_post_meta( $this->id, CSR_Config::POST_META_AVERAGE_KEY, $this->rating_average, true );
-		$this->rating_count     = get_post_meta( $this->id, CSR_Config::POST_META_COUNT_KEY, $this->rating_count, true );
-		$this->arranged_ratings = json_encode( $ratings );
 	}
 
 }
