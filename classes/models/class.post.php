@@ -37,10 +37,10 @@ class CSR_Post extends CSR_Model {
 	 */
 	public function __construct( $properties ) {
 		$defaults   = array(
-			'id'      => 0,
-			'rating'  => 0,
-			'rating_average'  => $this->ratings,
-			'rating_count' => 0,
+			'id'             => 0,
+			'ratings'        => 0,
+			'rating_average' => $this->ratings,
+			'rating_count'   => 0,
 		);
 		$properties = array_merge( $defaults, $properties );
 
@@ -50,7 +50,7 @@ class CSR_Post extends CSR_Model {
 		}
 
 		$this->id             = $properties['id'];
-		$this->ratings        = $properties['rating'];
+		$this->ratings        = $properties['ratings'];
 		$this->rating_average = $properties['rating_average'];
 		$this->rating_count   = $properties['rating_count'];
 	}
