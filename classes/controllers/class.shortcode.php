@@ -31,6 +31,7 @@ class CSR_Shortcode_Controller extends CSR_Controller {
 					'star_rating' => $star_rating,
 					'title'       => esc_html__( '5つ星のうち', 'csr-main' ),
 					'average'     => $this->csr_post->get( 'rating_average' ),
+					'rating_json' => $this->csr_post->get( 'ratings' ),
 				)
 			);
 		}
