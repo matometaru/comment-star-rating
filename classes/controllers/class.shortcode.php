@@ -45,9 +45,9 @@ class CSR_Shortcode_Controller extends CSR_Controller {
 	 *
 	 * @return string $outpu HTMLコード.
 	 */
-	public function _shortcode_post_ranking( $atts ) {
-		if ( isset( $atts['post_type'] ) ) {
-			$output = $this->get_average_ranking_html( $atts['post_type'] );
+	public function _shortcode_post_ranking( $attributes ) {
+		if ( isset( $attributes['post_type'] ) ) {
+			$output = $this->get_average_ranking_html( $attributes['post_type'] );
 		} else {
 			$output = $this->get_average_ranking_html();
 		}
@@ -67,7 +67,7 @@ class CSR_Shortcode_Controller extends CSR_Controller {
 			'post_type'      => $post_type,
 			'posts_per_page' => 3,
 			'order'          => 'DESC',
-			'meta_key'       => 'csr_average_rating',
+			'meta_key'       => CSR_Config::POST_META_AVERAGE_KEY,
 			'orderby'        => 'meta_value',
 		);
 		$posts = get_posts( $args );
@@ -77,7 +77,7 @@ class CSR_Shortcode_Controller extends CSR_Controller {
 				setup_postdata( $post );
 				$output .= '<li>';
 				$output .= '<a href="' . get_permalink( $post->ID ) . '">' . get_the_title( $post->ID ) . '</a>';
-				$output .= '<span class="csr-ranking-score">' . get_post_meta( $post->ID, 'csr_average_rating', true ) . '</span>';
+				$output .= '<span class="csr-ranking-score">' . get_post_meta( $post->ID, CSR_Config::POST_META_AVERAGE_KEY, true ) . '</span>';
 				$output .= '</li>';
 			}
 			$output .= '</ul>';
