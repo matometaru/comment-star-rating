@@ -23,10 +23,10 @@ class CSR_Config {
 	/**
 	 * Post meta average key
 	 */
-	const POST_META_AVERAGE_KEY = 'csr_average';
+	const POST_META_AVERAGE_KEY = 'csr_rating_average';
 	/**
 	 * Post meta count key
 	 */
-	const POST_META_COUNT_KEY = 'csr_count';
+	const POST_META_COUNT_KEY = 'csr_rating_count';
 
 }
