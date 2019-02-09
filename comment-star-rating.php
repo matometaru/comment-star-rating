@@ -73,6 +73,7 @@ class CommentStarRating {
 	public function _main() {
 		global $post;
 		new CSR_Main_Controller( $post->ID, $this->csr_option );
+		new CSR_Shortcode_Controller();
 	}
 }
 
