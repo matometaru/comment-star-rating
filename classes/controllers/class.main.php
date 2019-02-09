@@ -26,19 +26,11 @@ class CSR_Main_Controller extends CSR_Controller {
 	 * D3 init.
 	 */
 	public function d3_init() {
-		$ratings = $this->csr_post->get( 'ratings' );
 		$count   = $this->csr_post->get( 'rating_count' );
 		// 一覧を出力 D3.js.
 		?>
 		<script>
 			document.addEventListener('DOMContentLoaded', function () {
-				var dataset = [
-					{label: "5つ星", value: <?php echo esc_js( $ratings[5] ); ?>},
-					{label: "4つ星", value: <?php echo esc_js( $ratings[4] ); ?>},
-					{label: "3つ星", value: <?php echo esc_js( $ratings[3] ); ?>},
-					{label: "2つ星", value: <?php echo esc_js( $ratings[2] ); ?>},
-					{label: "1つ星", value: <?php echo esc_js( $ratings[1] ); ?>},
-				]
 				HorizontalBarGraph = function (el, series) {
 					this.el = d3.select(el);
 					this.series = series;
@@ -80,8 +72,20 @@ class CSR_Main_Controller extends CSR_Controller {
 						});
 				};
 
-				var graph = new HorizontalBarGraph('.star-counter', dataset);
-				graph.draw();
+				var elements = document.getElementsByClassName('star-counter');
+				console.log(elements);
+				 for (var i = 0; i < elements.length; i++) {
+				 	var ratings = JSON.parse(elements[i].dataset.ratings);
+					var dataset = [
+						{label: "5つ星", value: ratings[5] },
+						{label: "4つ星", value: ratings[4] },
+						{label: "3つ星", value: ratings[3] },
+						{label: "2つ星", value: ratings[2] },
+						{label: "1つ星", value: ratings[1] },
+					];
+					var graph = new HorizontalBarGraph(elements[i], dataset);
+					graph.draw();
+				}
 			});
 		</script>
 		<?php
