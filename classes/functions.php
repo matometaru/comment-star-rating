@@ -58,4 +58,23 @@ class CSR_Functions {
 
 		return $arranged_ratings;
 	}
+
+	/**
+	 * コメントの配列からレーティングの配列に変換
+	 *
+	 * @param int $comments 投稿ID.
+	 *
+	 * @return array $ratings
+	 */
+	public static function generate_ratings_from_comments( $comments ) {
+		$ratings = [];
+		foreach ( $comments as $comment ) {
+			$star = get_comment_meta( $comment->comment_ID, CSR_Config::COMMENT_META_KEY, true );
+			if ( ! empty( $star ) ) {
+				array_push( $ratings, $star );
+			}
+		}
+
+		return $ratings;
+	}
 }

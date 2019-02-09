@@ -101,7 +101,7 @@ class CommentStarRatingTest extends WP_UnitTestCase {
 	 */
 	public function test_コメント配列がレーティング配列に生成されたか() {
 		$comments = CSR_Post::find_all_approved_comments( $this->post1 );
-		$actual   = $this->comment_star_rating->generate_ratings_from_comments( $comments );
+		$actual   = CSR_Functions::generate_ratings_from_comments( $comments );
 		$this->assertEquals( [ 5, 3 ], $actual );
 	}
 
@@ -110,7 +110,7 @@ class CommentStarRatingTest extends WP_UnitTestCase {
 	 */
 	public function test_post1のコメントの平均値が4か() {
 		$comments = CSR_Post::find_all_approved_comments( $this->post1 );
-		$ratings  = $this->comment_star_rating->generate_ratings_from_comments( $comments );
+		$ratings  = CSR_Functions::generate_ratings_from_comments( $comments );
 		$actual   = CSR_Functions::calculate_average_rating( $ratings );
 		$this->assertEquals( 4, $actual );
 	}
