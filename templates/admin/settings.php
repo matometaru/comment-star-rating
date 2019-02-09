@@ -49,6 +49,6 @@
 	</form>
 </div>
 <div>
-	<h2>プラグイン作成者に非常食をプレゼント</h2>
+	<h2>プラグイン作成者の欲しいものリスト</h2>
 	<a class="button-primary" href="http://amzn.asia/atweOEp">プレゼントする</a>
 </div>
