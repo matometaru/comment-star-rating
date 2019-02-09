@@ -8,13 +8,13 @@
  * License: GPLv3
  * License URI: http://www.gnu.org/licenses/gpl-3.0
  */
-require_once plugin_dir_path( __FILE__ ) . 'classes/functions.php';
-require_once plugin_dir_path( __FILE__ ) . 'classes/config.php';
 
 /**
  * CommentStarRating
  */
 class CommentStarRating {
+
+	private $csr_option;
 
 	/**
 	 * Constructor.
@@ -23,15 +23,20 @@ class CommentStarRating {
 	 */
 	public function __construct() {
 		add_action( 'plugins_loaded', array( $this, '_load_initialize_files' ), 9 );
-		add_action( 'plugins_loaded', array( $this, '_init' ), 11 );
-		add_action( 'wp', array( $this, 'init' ), 11 );
+		add_action( 'after_setup_theme', array( $this, '_after_setup_theme' ), 11 );
+		add_action( 'wp', array( $this, '_main' ) );
 	}
 
 	/**
-	 * Load classes
+	 * プラグインがロード時に実行する処理.
+	 *
 	 * @return void
 	 */
 	public function _load_initialize_files() {
+		require_once ABSPATH . 'wp-admin/includes/template.php';
+		require_once plugin_dir_path( __FILE__ ) . 'classes/functions.php';
+		require_once plugin_dir_path( __FILE__ ) . 'classes/config.php';
+
 		$plugin_dir_path = plugin_dir_path( __FILE__ );
 		$includes        = array(
 			'/classes/abstract',
@@ -46,20 +51,29 @@ class CommentStarRating {
 		}
 	}
 
-	public function _init() {
-		$csr_option = CSR_Option::find();
-		new CSR_Admin_Controller( $csr_option );
+	/**
+	 * テーマセットアップ後に実行する処理.
+	 * 管理画面などはwpフックでは遅い.
+	 *
+	 * @return void
+	 */
+	public function _after_setup_theme() {
+		$this->csr_option = CSR_Option::find();
+		if ( is_admin() ) {
+			new CSR_Admin_Controller( $csr_option );
+		}
+		// 管理画面でもスター表示利用するのでここで定義.
 		new CSR_Comment_Controller();
 	}
 
 	/**
-	 * Init all.
+	 * メイン処理.
+	 * WPオブジェクトの利用はwpフック以後.
 	 */
-	public function init() {
-		$csr_option = CSR_Option::find();
-
-		new CSR_Main_Controller( $csr_option );
+	public function _main() {
+		global $post;
+		new CSR_Main_Controller( $post->ID, $this->csr_option );
 	}
 }
 
-$comment_star_rating = new CommentStarRating( $url );
+$comment_star_rating = new CommentStarRating();

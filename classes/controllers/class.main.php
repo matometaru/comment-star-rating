@@ -5,18 +5,18 @@ class CSR_Main_Controller extends CSR_Controller {
 	private $csr_option;
 	private $csr_post;
 	private $csr_post_service;
+	private $url;
 
-	public function __construct( $csr_option ) {
-		global $post;
-		$this->url              = 'http://localhost:9000/wp-content/plugins/comment-star-rating/';
+	public function __construct( $post_id, $csr_option ) {
+		$this->url              = plugins_url( CSR_Config::DOMAIN );
 		$this->csr_option       = $csr_option;
-		$this->csr_post_service = new CSR_Post_Service( $post->ID );
+		$this->csr_post_service = new CSR_Post_Service( $post_id );
 		$this->csr_post         = $this->csr_post_service->post_init();
 
 		if ( $this->csr_option->is_enabled_post_type() ) {
 			add_action( 'wp_head', array( $this, 'd3_init' ) );
 			add_action( 'wp_head', array( $this, 'raty_init' ) );
-			add_action( 'wp_head', array( $this, 'json_ld' ) );
+			add_action( 'wp_head', array( $this, 'json_ld' ), 11 );
 			add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_styles' ) );
 			add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_scripts' ) );
 			// ショートコード.
@@ -29,7 +29,6 @@ class CSR_Main_Controller extends CSR_Controller {
 	 * Shortcode.
 	 */
 	public function shortcode() {
-		require_once ABSPATH . 'wp-admin/includes/template.php';
 		$output = wp_star_rating(
 			array(
 				'rating' => $this->csr_post->get( 'rating_average' ),
@@ -104,7 +103,7 @@ class CSR_Main_Controller extends CSR_Controller {
 	 */
 	public function d3_init() {
 		$ratings = $this->csr_post->get( 'ratings' );
-		$count = $this->csr_post->get( 'rating_count' );
+		$count   = $this->csr_post->get( 'rating_count' );
 		// 一覧を出力 D3.js.
 		?>
 		<script>
@@ -193,17 +192,19 @@ class CSR_Main_Controller extends CSR_Controller {
 	 * JSON-LD.
 	 */
 	public function json_ld() {
-		$ratings = $this->csr_post->get( 'arranged_rating' );
+		$average = $this->csr_post->get( 'rating_average' );
+		$count   = $this->csr_post->get( 'rating_count' );
+		$ratings = $this->csr_post->get( 'ratings' );
 		?>
 		<script type="application/ld+json">
 			{
 				"@context": "http://schema.org",
 				"@type": "AggregateRating",
 				"itemReviewed": "Article",
-				"ratingValue": "<?php echo esc_js( $this->average ); ?>",
+				"ratingValue": "<?php echo esc_js( $average ); ?>",
 				"bestRating": "<?php echo esc_js( max( $ratings ) ); ?>",
 				"worstRating": "<?php echo esc_js( min( $ratings ) ); ?>",
-				"ratingCount": "<?php echo esc_js( $this->rating_count ); ?>"
+				"ratingCount": "<?php echo esc_js( $count ); ?>"
 			}
 		</script>
 		<?php
