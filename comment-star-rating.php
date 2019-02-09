@@ -8,11 +8,8 @@
  * License: GPLv3
  * License URI: http://www.gnu.org/licenses/gpl-3.0
  */
-// wp_star_rating() を使うためのインクルード.
-require_once ABSPATH . 'wp-admin/includes/template.php';
-include_once( plugin_dir_path( __FILE__ ) . 'classes/functions.php' );
-include_once( plugin_dir_path( __FILE__ ) . 'classes/config.php' );
-
+require_once plugin_dir_path( __FILE__ ) . 'classes/functions.php';
+require_once plugin_dir_path( __FILE__ ) . 'classes/config.php';
 
 /**
  * CommentStarRating
@@ -71,7 +68,7 @@ class CommentStarRating {
 	 * @param string $url プラグインURL.
 	 */
 	public function __construct( $url ) {
-		$this->url     = $url;
+		$this->url = $url;
 		// 全ファイル読み込み
 		add_action( 'plugins_loaded', array( $this, '_load_initialize_files' ), 9 );
 		add_action( 'plugins_loaded', array( $this, 'init' ), 11 );
@@ -130,6 +127,7 @@ class CommentStarRating {
 	 * Shortcode.
 	 */
 	public function shortcode() {
+		require_once ABSPATH . 'wp-admin/includes/template.php';
 		$output = wp_star_rating(
 			array(
 				'rating' => $this->average,
