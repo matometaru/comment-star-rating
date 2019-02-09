@@ -19,83 +19,7 @@ class CSR_Main_Controller extends CSR_Controller {
 			add_action( 'wp_head', array( $this, 'json_ld' ), 11 );
 			add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_styles' ) );
 			add_action( 'wp_enqueue_scripts', array( $this, 'wp_enqueue_scripts' ) );
-			// ショートコード.
-			add_shortcode( 'comment_star_rating_total', array( $this, 'shortcode' ) );
-			add_shortcode( 'comment_star_rating_ranking', array( $this, 'shortcode_post_ranking' ) );
 		}
-	}
-
-	/**
-	 * Shortcode.
-	 */
-	public function shortcode() {
-		$output = wp_star_rating(
-			array(
-				'rating' => $this->csr_post->get( 'rating_average' ),
-				'type'   => 'rating',
-				'number' => $this->csr_post->get( 'rating_count' ),
-				'echo'   => false,
-			)
-		);
-		if ( $this->csr_post->get( 'rating_count' ) > 0 ) {
-			$output .= '<p class="star-counter-tit">';
-			$output .= esc_html__( '5つ星のうち', 'csr-main' );
-			$output .= $this->csr_post->get( 'rating_average' );
-			$output .= '</p>';
-			$output .= '<div id="star-counter"></div>';
-		}
-
-		return $output;
-	}
-
-	/**
-	 * Shortcode.
-	 *
-	 * @param array $atts 投稿タイプ文字列.
-	 *
-	 * @return string $outpu HTMLコード.
-	 */
-	public function shortcode_post_ranking( $atts ) {
-		if ( isset( $atts['post_type'] ) ) {
-			$output = $this->get_average_ranking_html( $atts['post_type'] );
-		} else {
-			$output = $this->get_average_ranking_html();
-		}
-
-		return $output;
-	}
-
-	/**
-	 * Shortcode.
-	 *
-	 * @param string $post_type 投稿タイプ文字列.
-	 *
-	 * @return string $html HTMLコード.
-	 */
-	public function get_average_ranking_html( $post_type = 'post' ) {
-		$args  = array(
-			'post_type'      => $post_type,
-			'posts_per_page' => 3,
-			'order'          => 'DESC',
-			'meta_key'       => 'csr_average_rating',
-			'orderby'        => 'meta_value',
-		);
-		$posts = get_posts( $args );
-		if ( ! empty( $posts ) ) {
-			$output = '<ul id="csr-ranking">';
-			foreach ( $posts as $post ) {
-				setup_postdata( $post );
-				$output .= '<li>';
-				$output .= '<a href="' . get_permalink( $post->ID ) . '">' . get_the_title( $post->ID ) . '</a>';
-				$output .= '<span class="csr-ranking-score">' . get_post_meta( $post->ID, 'csr_average_rating', true ) . '</span>';
-				$output .= '</li>';
-			}
-			$output .= '</ul>';
-		} else {
-			$output = '<p>評価された記事がありません。</p>';
-		}
-
-		return $output;
 	}
 
 	/**
@@ -156,7 +80,7 @@ class CSR_Main_Controller extends CSR_Controller {
 						});
 				};
 
-				var graph = new HorizontalBarGraph('#star-counter', dataset);
+				var graph = new HorizontalBarGraph('.star-counter', dataset);
 				graph.draw();
 			});
 		</script>
