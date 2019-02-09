@@ -16,11 +16,6 @@ require_once plugin_dir_path( __FILE__ ) . 'classes/config.php';
  */
 class CommentStarRating {
 	/**
-	 * 全評価配列.
-	 * @var array $ratings
-	 */
-	private $ratings = array();
-	/**
 	 * 全評価の数.
 	 * @var int $rating_count
 	 */
@@ -35,15 +30,6 @@ class CommentStarRating {
 	 * @var array $ratings_arrange 配列
 	 */
 	private $arranged_ratings;
-	/**
-	 * 現在ページの投稿ID.
-	 * @var int $current_post_id
-	 */
-	private $current_post_id;
-
-	public function set_ratings( $ratings ) {
-		$this->ratings = $ratings;
-	}
 
 	public function set_rating_count( $rating_count ) {
 		$this->rating_count = $rating_count;
@@ -83,7 +69,6 @@ class CommentStarRating {
 	 */
 	public function init_wp_after_hooks() {
 		global $post;
-		$this->current_post_id = $post->ID;
 		if ( CSR_Option::find()->is_enabled_post_type() ) {
 			$this->setup_comment_rating( $post->ID );
 			add_action( 'wp_head', array( $this, 'd3_init' ) );
@@ -193,45 +178,17 @@ class CommentStarRating {
 	}
 
 	/**
-	 * 投稿IDの集計に必要なデータをセット.
+	 * 投稿IDの集計に必要なデータをセット
+	 * 投稿モデルのインスタンスを返す。
 	 *
 	 * @param int $post_id 投稿ID.
+	 *
+	 * @return CSR_Post
 	 */
 	public function setup_comment_rating( $post_id ) {
-		CSR_Option::find();
-
-		$comments = CSR_Post::find_all_approved_comments( $post_id );
-		$ratings  = $this->generate_ratings_from_comments( $comments );
-		$this->set_ratings( $ratings );
-
-		$rating_count = count( $ratings );
-		$this->set_rating_count( $rating_count );
-
-		$average = CSR_Functions::calculate_average_rating( $ratings );
-		$this->set_average( $average );
-
-		$arranged_ratings = CSR_Functions::arrange_ratings( $ratings );
-		$this->set_arranged_ratings( $arranged_ratings );
-		update_post_meta( $this->current_post_id, 'csr_average_rating', $this->average );
-	}
-
-	/**
-	 * コメントの配列からレーティングの配列に変換
-	 *
-	 * @param int $comments 投稿ID.
-	 *
-	 * @return array $ratings
-	 */
-	public function generate_ratings_from_comments( $comments ) {
-		$ratings = [];
-		foreach ( $comments as $comment ) {
-			$star = get_comment_meta( $comment->comment_ID, CSR_Config::COMMENT_META_KEY, true );
-			if ( ! empty( $star ) ) {
-				array_push( $ratings, $star );
-			}
-		}
-
-		return $ratings;
+		$this->csr_option = CSR_Option::find();
+		$this->csr_post_service = new CSR_Post_Service( $post_id );
+		$this->csr_post_service->post_init();
 	}
 
 	/**
@@ -325,15 +282,16 @@ class CommentStarRating {
 	 * JSON-LD.
 	 */
 	public function json_ld() {
+		$ratings = $this->csr_post->get( 'arranged_rating' );
 		?>
 		<script type="application/ld+json">
 			{
 				"@context": "http://schema.org",
 				"@type": "AggregateRating",
 				"itemReviewed": "Article",
-				"ratingValue": "<?php echo esc_js( number_format_i18n( $this->average, 1 ) ); ?>",
-				"bestRating": "<?php echo esc_js( max( $this->ratings ) ); ?>",
-				"worstRating": "<?php echo esc_js( min( $this->ratings ) ); ?>",
+				"ratingValue": "<?php echo esc_js( $this->average ); ?>",
+				"bestRating": "<?php echo esc_js( max( $ratings ) ); ?>",
+				"worstRating": "<?php echo esc_js( min( $ratings ) ); ?>",
 				"ratingCount": "<?php echo esc_js( $this->rating_count ); ?>"
 			}
 		</script>
