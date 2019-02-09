@@ -26,7 +26,6 @@ class CSR_Main_Controller extends CSR_Controller {
 	 * D3 init.
 	 */
 	public function d3_init() {
-		$count   = $this->csr_post->get( 'rating_count' );
 		// 一覧を出力 D3.js.
 		?>
 		<script>
@@ -35,9 +34,10 @@ class CSR_Main_Controller extends CSR_Controller {
 					this.el = d3.select(el);
 					this.series = series;
 				};
-				HorizontalBarGraph.prototype.draw = function () {
+				HorizontalBarGraph.prototype.draw = function (count) {
+					console.log(count);
 					var x = d3.scaleLinear()
-						.domain([0, <?php echo esc_js( $count ); ?>])
+						.domain([0, count])
 						.range([0, 100]);
 
 					var segment = this.el
@@ -73,9 +73,9 @@ class CSR_Main_Controller extends CSR_Controller {
 				};
 
 				var elements = document.getElementsByClassName('star-counter');
-				console.log(elements);
 				 for (var i = 0; i < elements.length; i++) {
 				 	var ratings = JSON.parse(elements[i].dataset.ratings);
+				 	var count = elements[i].dataset.count;
 					var dataset = [
 						{label: "5つ星", value: ratings[5] },
 						{label: "4つ星", value: ratings[4] },
@@ -84,7 +84,7 @@ class CSR_Main_Controller extends CSR_Controller {
 						{label: "1つ星", value: ratings[1] },
 					];
 					var graph = new HorizontalBarGraph(elements[i], dataset);
-					graph.draw();
+					graph.draw(count);
 				}
 			});
 		</script>

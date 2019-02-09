@@ -28,10 +28,11 @@ class CSR_Shortcode_Controller extends CSR_Controller {
 			return $this->_generator(
 				'shortcode/settings',
 				array(
-					'star_rating' => $star_rating,
-					'title'       => esc_html__( '5つ星のうち', 'csr-main' ),
-					'average'     => $this->csr_post->get( 'rating_average' ),
-					'rating_json' => $this->csr_post->get( 'ratings' ),
+					'star_rating'  => $star_rating,
+					'title'        => esc_html__( '5つ星のうち', 'csr-main' ),
+					'average'      => $this->csr_post->get( 'rating_average' ),
+					'rating_json'  => $this->csr_post->get( 'ratings' ),
+					'rating_count' => $this->csr_post->get( 'rating_count' ),
 				)
 			);
 		}
