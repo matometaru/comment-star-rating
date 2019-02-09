@@ -3,7 +3,7 @@
 class CSR_Functions {
 
 	/**
-	 * $_POSTのCOMMENT_META_KEYを0~5の値で検証し、返す.
+	 * 0~5の値で検証し、返す.
 	 *
 	 * @param void $rating ユーザー入力値.
 	 *
@@ -19,6 +19,24 @@ class CSR_Functions {
 		);
 
 		return filter_var( $rating, FILTER_VALIDATE_INT, $options );
+	}
+
+	/**
+	 * 投稿IDを検証し、返す.
+	 *
+	 * @param void $post_id ユーザー入力値.
+	 *
+	 * @return int 投稿ID.
+	 */
+	public static function validate_post_id( $post_id ) {
+		$options = array(
+			'options' => array(
+				'default'   => get_the_ID(),
+				'min_range' => 1,
+			),
+		);
+
+		return filter_var( $post_id, FILTER_VALIDATE_INT, $options );
 	}
 
 	/**
