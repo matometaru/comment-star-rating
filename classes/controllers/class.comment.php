@@ -5,8 +5,8 @@ class CSR_Comment_Controller extends CSR_Controller {
 	public function __construct() {
 		add_action( 'comment_text', array( $this, '_comment_display' ) );
 		add_action( 'comment_post', array( $this, '_save_rating' ) );
-		add_filter( 'comment_form_default_fields', array( $this, '_filter_comment_form' ) );
-		add_filter( 'comment_form_fields', array( $this, '_add_star_field' ) );
+		add_action( 'comment_form_default_fields', array( $this, '_filter_comment_form' ) );
+		add_action( 'comment_form_fields', array( $this, '_add_star_field' ) );
 	}
 
 	/**
