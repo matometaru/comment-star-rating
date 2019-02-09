@@ -18,8 +18,6 @@ class CommentStarRating {
 
 	/**
 	 * Constructor.
-	 *
-	 * @param string $url プラグインURL.
 	 */
 	public function __construct() {
 		add_action( 'plugins_loaded', array( $this, '_load_initialize_files' ), 9 );
@@ -60,7 +58,7 @@ class CommentStarRating {
 	public function _after_setup_theme() {
 		$this->csr_option = CSR_Option::find();
 		if ( is_admin() ) {
-			new CSR_Admin_Controller( $csr_option );
+			new CSR_Admin_Controller( $this->csr_option );
 		}
 		// 管理画面でもスター表示利用するのでここで定義.
 		new CSR_Comment_Controller();
