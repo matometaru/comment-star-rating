@@ -1,7 +1,6 @@
 <?php
 /**
  * Class CommentStarRatingTest
- *
  * @package Commen-star-rating
  */
 
@@ -11,6 +10,8 @@
 class CommentStarRatingTest extends WP_UnitTestCase {
 
 	private $comment_star_rating;
+	private $csr_options;
+	private $csr_comment_controller;
 	private $post1;
 	private $post2;
 	private $comment1;
@@ -27,9 +28,10 @@ class CommentStarRatingTest extends WP_UnitTestCase {
 	public function __construct( $name = null, array $data = array(), $data_name = '' ) {
 		parent::__construct( $name, $data, $data_name );
 
-		$url                       = plugins_url( '', __FILE__ );
-		$this->comment_star_rating = new CommentStarRating( $url );
-		CSR_Option::find()->save( self::ENABLE_POST );
+		$url                          = plugins_url( '', __FILE__ );
+		$this->comment_star_rating    = new CommentStarRating( $url );
+		$this->csr_options            = CSR_Option::find();
+		$this->csr_comment_controller = new CSR_Comment_Controller( $this->csr_options );
 	}
 
 	/**
@@ -62,12 +64,12 @@ class CommentStarRatingTest extends WP_UnitTestCase {
 	 */
 	public function test_filter_comment_formによりサイトの表示が消えてるか() {
 		$options = array_merge( self::ENABLE_EMAIL, self::ENABLE_URL );
-		CSR_Option::find()->set_options( $options )->save();
+		$this->csr_options->set_options( $options )->save();
 		$fields = array(
 			'email' => 1,
 			'url'   => 2,
 		);
-		$actual = $this->comment_star_rating->filter_comment_form( $fields );
+		$actual = $this->csr_comment_controller->_filter_comment_form( $fields );
 		$this->assertEquals( null, $actual['email'] );
 		$this->assertEquals( null, $actual['url'] );
 	}
@@ -79,8 +81,8 @@ class CommentStarRatingTest extends WP_UnitTestCase {
 		$comment_id = $this->factory->comment->create( array( 'comment_post_ID' => $this->post2 ) );
 
 		$_POST['csr_rating'] = 'abc';
-		$comment_id = $this->comment_star_rating->save_rating( $comment_id );
-		$actual     = get_comment_meta( $comment_id, CSR_Config::COMMENT_META_KEY, true );
+		$comment_id          = $this->csr_comment_controller->_save_rating( $comment_id );
+		$actual              = get_comment_meta( $comment_id, CSR_Config::COMMENT_META_KEY, true );
 		$this->assertEquals( 3, $actual );
 	}
 
@@ -89,8 +91,8 @@ class CommentStarRatingTest extends WP_UnitTestCase {
 	 */
 	public function test_save_ratingでコメントメタに5が保存されてるか() {
 		$_POST['csr_rating'] = 5;
-		$comment_id = $this->comment_star_rating->save_rating( $this->comment1 );
-		$actual     = get_comment_meta( $comment_id, CSR_Config::COMMENT_META_KEY, true );
+		$comment_id          = $this->csr_comment_controller->_save_rating( $this->comment1 );
+		$actual              = get_comment_meta( $comment_id, CSR_Config::COMMENT_META_KEY, true );
 		$this->assertEquals( 5, $actual );
 	}
 
@@ -109,7 +111,7 @@ class CommentStarRatingTest extends WP_UnitTestCase {
 	public function test_post1のコメントの平均値が4か() {
 		$comments = CSR_Post::find_all_approved_comments( $this->post1 );
 		$ratings  = $this->comment_star_rating->generate_ratings_from_comments( $comments );
-		$actual = CSR_Functions::calculate_average_rating( $ratings );
+		$actual   = CSR_Functions::calculate_average_rating( $ratings );
 		$this->assertEquals( 4, $actual );
 	}
 
