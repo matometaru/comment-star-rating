@@ -8,7 +8,7 @@
 				<label>
 					<input
 						type="checkbox"
-						name="<?php echo esc_attr_e( CSR_Config::DOMAIN, 'csr-form' ); ?>[<?php echo esc_attr( $post_type ); ?>]"
+						name="<?php echo esc_attr_e( CSR_Config::DOMAIN, 'csr-form' ); ?>[<?php esc_attr_e( $post_type ); ?>]"
 						value="1"
 						<?php if ( CSR_Option::find()->is_enabled_post_type( $post_type ) ) echo 'checked'; ?>
 					/>
