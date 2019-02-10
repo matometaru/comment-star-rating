@@ -1,5 +1,6 @@
 === Comment Star Rating ===
 Contributors: matometaru
+Donate link: http://amzn.asia/atweOEp
 Tags: comment
 Requires at least: 4.0
 Tested up to: 5.0.3
