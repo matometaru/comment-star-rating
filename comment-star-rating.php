@@ -4,7 +4,7 @@
  * Description: WordPress plugin to rate comments on 5 beautiful stars.
  * Author: Matometaru
  * Author URI: http://matometaru.com/
- * Version: 1.2
+ * Version: 1.3
  * License: GPLv3
  * License URI: http://www.gnu.org/licenses/gpl-3.0
  */
