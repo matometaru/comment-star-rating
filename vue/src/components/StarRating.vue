@@ -2,16 +2,18 @@
   <v-layout text-xs-center wrap>
     <v-rating
       v-model="rate"
-      :length="length"
-      :empty-icon="emptyIcon"
+      length="5"
+      hover="true"
       :full-icon="fullIcon"
-      :hover="hover"
+      :empty-icon="emptyIcon"
+      :half-increments="halfIncrements"
+      :half-icon="halfIcon"
       :readonly="readonly"
       :color="color"
       :background-color="color"
       :size="size"
     ></v-rating>
-    <p>{{rate}}</p>
+    <p>{{rating}}</p>
   </v-layout>
 </template>
 
@@ -38,21 +40,18 @@
         type: Boolean,
         default: true,
       },
+      halfIncrements: {
+        type: Boolean,
+        default: false,
+      },
     },
     data: function () {
       return {
-        emptyIcon: `${this.icon}-outline`,
         fullIcon: this.icon,
-        hover: true,
+        emptyIcon: `${this.icon}-outline`,
+        halfIcon: `${this.icon}-half-full`,
         rate: this.rating,
-        length: 5,
       }
-    },
-    mounted () {
     },
   }
 </script>
-
-<style>
-
-</style>

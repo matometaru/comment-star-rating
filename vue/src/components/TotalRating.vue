@@ -6,8 +6,22 @@
       :icon="icon"
       :rating="average"
       :size="size"
+      halfIncrements="true"
     />
     <div class="ctr-counter-main">
+      <template v-for="data in dataset">
+        <div class="horizontal-bar-graph-segment">
+          <div class="horizontal-bar-graph-label">{{data.label}}</div>
+          <div class="horizontal-bar-graph-value">
+            <div class="horizontal-bar-graph-value-bg">
+              <div class="horizontal-bar-graph-value-bar"
+                   v-bind:style="{ width: width(data.value), backgroundColor: color }"
+              ></div>
+            </div>
+          </div>
+          <div class="horizontal-bar-graph-num">{{data.value}}</div>
+        </div>
+      </template>
     </div>
     <button v-on:click="counter">counter</button>
   </div>
@@ -15,7 +29,6 @@
 
 <script>
   import StarRating from './StarRating'
-  import Graph from './Graph.js'
   export default {
     components: {
       StarRating,
@@ -28,7 +41,7 @@
         type: Number,
         default: 24,
       },
-      ratings: {
+      dataset: {
         type: Array,
         default: [],
       },
@@ -42,33 +55,21 @@
     },
     computed: {
       total: function () {
-        return this.ratings.reduce((a, x) => a += x.value , 0);
+        return this.dataset.reduce((a, x) => a += (x.value * x.key)  , 0);
       },
       count: function () {
-        return this.ratings.reduce((a, x) => a += x.value, 0);
+        return this.dataset.reduce((a, x) => a += x.value, 0);
       },
       average: function () {
-        return Math.round(3.42, 1);
+        return Math.round(this.total/this.count * 10) /10;
       },
     },
     methods: {
       counter: function () {
-        this.ratings[0].value++;
-      }
-    },
-    watch: {
-      ratings: {
-        handler: function () {
-          this.graph.dataset = this.ratings;
-          this.graph.update();
-        },
-        deep: true
-      }
-    },
-    mounted () {
-      if (this.ratings.length > 0) {
-        this.graph = new Graph('.ctr-counter-main', this.count , this.ratings, this.color);
-        this.graph.draw();
+        this.dataset[0].value++;
+      },
+      width: function (value) {
+        return `${value/this.count * 100}%`;
       }
     },
   }
