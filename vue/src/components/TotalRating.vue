@@ -104,12 +104,8 @@
       }
       &-bar {
         background: #daa520;
-        box-sizing: border-box;
         height: 1.7em;
-        vertical-align: bottom;
-        overflow: visible;
-        display: inline-block;
-        white-space: nowrap;
+        transition: all .5s;
       }
     }
     &-num {
