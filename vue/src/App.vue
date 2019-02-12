@@ -14,9 +14,10 @@
         :readonly="false"
       />
       <TotalRating
-        :rating="average"
+        text="5つのハートのうち${this.average}"
+        color="#ef9a9a"
+        :icon="icon"
         :size="24"
-        text="5つ星のうち3.2"
         :dataset="ratings"
       />
     </v-content>
@@ -44,7 +45,6 @@ export default {
         {"label":"ハート2","key":2,"value":0},
         {"label":"ハート1","key":1,"value":1}
       ],
-      average: 3.5,
     }
   }
 }

@@ -1,20 +1,17 @@
 <template>
-  <v-layout text-xs-center wrap>
-    <v-rating
-      v-model="rate"
-      length="5"
-      hover="true"
-      :full-icon="fullIcon"
-      :empty-icon="emptyIcon"
-      :half-increments="halfIncrements"
-      :half-icon="halfIcon"
-      :readonly="readonly"
-      :color="color"
-      :background-color="color"
-      :size="size"
-    ></v-rating>
-    <p>{{rating}}</p>
-  </v-layout>
+  <v-rating
+    v-model="rating"
+    length="5"
+    hover="true"
+    :full-icon="icon"
+    :empty-icon="emptyIcon"
+    :half-increments="halfIncrements"
+    :half-icon="halfIcon"
+    :readonly="readonly"
+    :color="color"
+    :background-color="color"
+    :size="size"
+  ></v-rating>
 </template>
 
 <script>
@@ -47,10 +44,8 @@
     },
     data: function () {
       return {
-        fullIcon: this.icon,
         emptyIcon: `${this.icon}-outline`,
         halfIcon: `${this.icon}-half-full`,
-        rate: this.rating,
       }
     },
   }
