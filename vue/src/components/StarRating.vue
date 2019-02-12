@@ -1,7 +1,7 @@
 <template>
   <v-layout text-xs-center wrap>
     <v-rating
-      v-model="rating"
+      v-model="rate"
       :length="length"
       :empty-icon="emptyIcon"
       :full-icon="fullIcon"
@@ -11,12 +11,12 @@
       :background-color="color"
       :size="size"
     ></v-rating>
+    <p>{{rate}}</p>
   </v-layout>
 </template>
 
 <script>
   export default {
-    props: ['color', 'icon', 'rating', 'readonly'],
     props: {
       color: {
         type: String,
@@ -36,7 +36,7 @@
       },
       readonly: {
         type: Boolean,
-        default: false,
+        default: true,
       },
     },
     data: function () {
@@ -44,13 +44,11 @@
         emptyIcon: `${this.icon}-outline`,
         fullIcon: this.icon,
         hover: true,
-        rating: this.rating,
+        rate: this.rating,
         length: 5,
       }
     },
     mounted () {
-      console.log(this.rating);
-      console.log(options.color);
     },
   }
 </script>
