@@ -4,6 +4,8 @@ import router from './router';
 import store from './store';
 import './plugins/vuetify'
 import 'vuetify/dist/vuetify.min.css'
+import sanitizeHTML from 'sanitize-html'
+Vue.prototype.$sanitize = sanitizeHTML
 
 Vue.config.productionTip = false;
 
