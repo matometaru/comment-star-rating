@@ -8,18 +8,19 @@
       />
       <StarRating
         color="#ef9a9a"
+        halfIncrements="true"
         :icon="icon"
-        :rating="3"
+        :rating="3.5"
         :size="24"
         :readonly="false"
       />
       <TotalRating
         text="5つのハートのうち${this.average}"
-        color="#ef9a9a"
-        :icon="icon"
         :size="24"
         :dataset="ratings"
       />
+      <router-link to="/rating">ABOUT</router-link>
+      <router-view></router-view>
     </v-content>
   </v-app>
 </template>
@@ -39,11 +40,11 @@ export default {
       color: options.color,
       icon: options.icon,
       ratings: [
-        {"label":"ハート5","key":5,"value":2},
-        {"label":"ハート4","key":4,"value":0},
-        {"label":"ハート3","key":3,"value":1},
-        {"label":"ハート2","key":2,"value":0},
-        {"label":"ハート1","key":1,"value":1}
+        {"label":"星5","key":5,"value":2},
+        {"label":"星4","key":4,"value":0},
+        {"label":"星3","key":3,"value":1},
+        {"label":"星2","key":2,"value":0},
+        {"label":"星1","key":1,"value":1}
       ],
     }
   }

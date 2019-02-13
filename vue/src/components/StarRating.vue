@@ -2,7 +2,7 @@
   <v-rating
     v-model="rating"
     length="5"
-    hover="true"
+    :hover="true"
     :full-icon="icon"
     :empty-icon="emptyIcon"
     :half-increments="halfIncrements"
@@ -45,7 +45,7 @@
     data: function () {
       return {
         emptyIcon: `${this.icon}-outline`,
-        halfIcon: `${this.icon}-half-full`,
+        halfIcon: `${this.icon}-half`,
       }
     },
   }

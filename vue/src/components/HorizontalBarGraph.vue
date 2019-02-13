@@ -1,17 +1,19 @@
 <template>
   <div class="ctr-counter-main">
     <template v-for="data in dataset">
-      <div class="horizontal-bar-graph-segment">
-        <div class="horizontal-bar-graph-label">{{data.label}}</div>
-        <div class="horizontal-bar-graph-value">
-          <div class="horizontal-bar-graph-value-bg">
-            <div class="horizontal-bar-graph-value-bar"
-                 v-bind:style="{ width: width(data.value), backgroundColor: color }"
-            ></div>
+      <router-link to="/rating">
+        <div class="horizontal-bar-graph-segment">
+          <div class="horizontal-bar-graph-label">{{data.label}}</div>
+          <div class="horizontal-bar-graph-value">
+            <div class="horizontal-bar-graph-value-bg">
+              <div class="horizontal-bar-graph-value-bar"
+                   v-bind:style="{ width: width(data.value), backgroundColor: color }"
+              ></div>
+            </div>
           </div>
+          <div class="horizontal-bar-graph-num">{{data.value}}</div>
         </div>
-        <div class="horizontal-bar-graph-num">{{data.value}}</div>
-      </div>
+      </router-link>
     </template>
   </div>
 </template>

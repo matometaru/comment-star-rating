@@ -5,7 +5,7 @@
       :icon="icon"
       :rating="average"
       :size="size"
-      halfIncrements="true"
+      :halfIncrements="true"
     />
     <p class="ctr-counter-text">{{replacedText}}</p>
     <HorizontalBarGraph
