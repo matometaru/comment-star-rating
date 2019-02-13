@@ -8,8 +8,8 @@
       />
       <StarRating
         color="#ef9a9a"
-        halfIncrements="true"
-        :icon="icon"
+        :halfIncrements="true"
+        icon="heart"
         :rating="3.5"
         :size="24"
         :readonly="false"
@@ -19,7 +19,7 @@
         :size="24"
         :dataset="ratings"
       />
-      <router-link to="/rating">ABOUT</router-link>
+      <router-link to="/rating">Rating</router-link>
       <router-view></router-view>
     </v-content>
   </v-app>

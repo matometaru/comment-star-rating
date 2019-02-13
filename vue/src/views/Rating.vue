@@ -10,7 +10,7 @@
             <li v-for="comment in comments">
               <div class="comment-head"><img :src="avatar" alt=""><span>{{comment.author_name}}</span></div>
               <StarRating
-                :rating="comment.csr_rating"
+                :rating="parseInt(comment.csr_rating)"
               />
               <p>{{comment.date}}</p>
               <div v-html="$sanitize(comment.content.rendered)"></div>

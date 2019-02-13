@@ -3,10 +3,10 @@
     v-model="rating"
     length="5"
     :hover="true"
-    :full-icon="icon"
-    :empty-icon="emptyIcon"
+    :full-icon="selectedIcon.full"
+    :empty-icon="selectedIcon.empty"
+    :half-icon="selectedIcon.half"
     :half-increments="halfIncrements"
-    :half-icon="halfIcon"
     :readonly="readonly"
     :color="color"
     :background-color="color"
@@ -15,6 +15,11 @@
 </template>
 
 <script>
+  const icons = {
+    'heart': {'full': 'mdi-heart', 'empty': 'mdi-heart-outline', 'half': 'mdi-heart-half-full'},
+    'star': {'full': 'mdi-star', 'empty': 'mdi-star-outline', 'half': 'mdi-star-half'}
+  };
+
   export default {
     props: {
       color: {
@@ -23,7 +28,7 @@
       },
       icon: {
         type: String,
-        default: 'mdi-star',
+        default: 'star',
       },
       rating: {
         type: Number,
@@ -44,9 +49,8 @@
     },
     data: function () {
       return {
-        emptyIcon: `${this.icon}-outline`,
-        halfIcon: `${this.icon}-half`,
+        selectedIcon: icons[this.icon],
       }
-    },
+    }
   }
 </script>

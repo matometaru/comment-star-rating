@@ -33,7 +33,7 @@
       },
       icon: {
         type: String,
-        default: 'mdi-star',
+        default: 'star',
       },
       size: {
         type: Number,
