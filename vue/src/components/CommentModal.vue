@@ -23,7 +23,7 @@
 </template>
 
 <script>
-  import StarRating from '../components/StarRating'
+  import StarRating from './StarRating'
 
   export default {
     components: {
