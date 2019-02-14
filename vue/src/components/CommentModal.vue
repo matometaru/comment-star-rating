@@ -29,10 +29,13 @@
     components: {
       StarRating
     },
+    mounted: function () {
+      this.fetchComment();
+    },
     data: function () {
       return {
-        dialog: true,
-        rating: this.$route.params.rating,
+        dialog: false,
+        rating: 0,
         title: 'Hello World!',
         avatar: 'http://1.gravatar.com/avatar/?s=96&d=mm&r=g',
         comments: [
@@ -40,6 +43,8 @@
           {"id":33,"author_name":"めたる","date":"2019-02-09T15:29:25","content":{"rendered":"<p>すごい。</p>\n"},"status":"approved","csr_rating":"5"},
           {"id":32,"author_name":"Mike","author_url":"","date":"2019-02-09T15:28:56","content":{"rendered":"<p>Good Job!!</p>\n"},"status":"approved","csr_rating":"5"},
           {"id":31,"author_name":"鈴木","author_url":"","date":"2019-02-09T15:29:56","content":{"rendered":"<p>ためになります。</p>\n"},"status":"approved","csr_rating":"4"},
+          {"id":30,"author_name":"まとまる","date":"2019-02-09T15:29:25","content":{"rendered":"<p>いいですね。</p>\n"},"status":"approved","csr_rating":"4"},
+          {"id":30,"author_name":"まとまる","date":"2019-02-09T15:29:25","content":{"rendered":"<p>いいですね。</p>\n"},"status":"approved","csr_rating":"4"},
           {"id":30,"author_name":"まとまる","date":"2019-02-09T15:29:25","content":{"rendered":"<p>いいですね。</p>\n"},"status":"approved","csr_rating":"4"},
           {"id":29,"author_name":"John","author_url":"","date":"2019-02-09T15:28:56","content":{"rendered":"<p>Nice!!</p>\n"},"status":"approved","csr_rating":"4"}
         ]
@@ -52,12 +57,16 @@
         });
       }
     },
-    watch: {
-      '$route': function (to, from) {
-        if (to.path !== from.path) {
-          this.dialog = true;
-          this.rating = to.params.rating;
-        }
+    methods: {
+      open: function (value) {
+        this.dialog = true;
+        this.rating = value;
+      },
+      close: function () {
+        this.dialog = false;
+      },
+      fetchComment: async function () {
+        console.log("fetched");
       }
     }
   }

@@ -1,7 +1,7 @@
 <template>
   <div class="ctr-counter-main">
     <template v-for="data in dataset">
-      <router-link :to="{ name: 'rating', params: { rating: data.key }}">
+      <a href="#" @click="handleOpen(data.key)">
         <div class="horizontal-bar-graph-segment">
           <div class="horizontal-bar-graph-label">{{data.label}}</div>
           <div class="horizontal-bar-graph-value">
@@ -13,13 +13,19 @@
           </div>
           <div class="horizontal-bar-graph-num">{{data.value}}</div>
         </div>
-      </router-link>
+      </a>
     </template>
+    <CommentModal ref="commentModal"/>
   </div>
 </template>
 
 <script>
+  import CommentModal from './CommentModal'
+
   export default {
+    components: {
+      CommentModal
+    },
     props: {
       color: {
         type: String,
@@ -44,6 +50,9 @@
     methods: {
       width: function (value) {
         return `${value/this.count * 100}%`;
+      },
+      handleOpen: function (value) {
+        this.$refs.commentModal.open(value)
       }
     },
   }
