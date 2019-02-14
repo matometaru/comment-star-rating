@@ -19,8 +19,6 @@
         :size="24"
         :dataset="ratings"
       />
-      <router-link to="/rating">Rating</router-link>
-      <router-view></router-view>
     </v-content>
   </v-app>
 </template>
