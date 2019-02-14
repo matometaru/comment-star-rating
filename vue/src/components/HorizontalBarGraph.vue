@@ -1,7 +1,7 @@
 <template>
   <div class="ctr-counter-main">
     <template v-for="data in dataset">
-      <router-link to="/rating">
+      <router-link :to="{ name: 'rating', params: { rating: data.key }}">
         <div class="horizontal-bar-graph-segment">
           <div class="horizontal-bar-graph-label">{{data.label}}</div>
           <div class="horizontal-bar-graph-value">

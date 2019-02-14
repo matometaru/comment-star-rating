@@ -12,7 +12,7 @@ export default new Router({
       component: Home,
     },
     {
-      path: '/rating',
+      path: '/rating/:rating',
       name: 'rating',
       component: () => import('./views/Rating.vue'),
     },

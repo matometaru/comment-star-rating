@@ -1,13 +1,13 @@
 <template>
   <v-layout row justify-center>
-    <v-dialog v-model="dialog" persistent max-width="600px">
+    <v-dialog v-model="dialog" max-width="600px">
       <v-card>
         <v-card-title>
-          <span class="headline">{{title}}</span>
+          <span class="headline">{{title}} {{rating}}</span>
         </v-card-title>
         <v-card-text>
           <ul class="comment-list">
-            <li v-for="comment in comments">
+            <li v-for="comment in filteredComments">
               <div class="comment-head"><img :src="avatar" alt=""><span>{{comment.author_name}}</span></div>
               <StarRating
                 :rating="parseInt(comment.csr_rating)"
@@ -32,6 +32,7 @@
     data: function () {
       return {
         dialog: true,
+        rating: this.$route.params.rating,
         title: 'Hello World!',
         avatar: 'http://1.gravatar.com/avatar/?s=96&d=mm&r=g',
         comments: [
@@ -44,6 +45,21 @@
         ]
       }
     },
+    computed: {
+      filteredComments: function () {
+        return this.comments.filter((v) => {
+          return v.csr_rating == this.rating;
+        });
+      }
+    },
+    watch: {
+      '$route': function (to, from) {
+        if (to.path !== from.path) {
+          this.dialog = true;
+          this.rating = to.params.rating;
+        }
+      }
+    }
   }
 </script>
 
